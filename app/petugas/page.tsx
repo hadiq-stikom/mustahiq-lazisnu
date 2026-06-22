@@ -16,7 +16,6 @@ interface Usulan {
 
 interface Warga {
   id: number;
-  no_urut: number;
   nama: string;
   keterangan: string | null;
   rt_id: number;
@@ -41,12 +40,12 @@ interface RTDropdown {
 
 export default function DasborPetugas() {
   const router = useRouter();
-  
+
   // State manajemen data
   const [dataTergrup, setDataTergrup] = useState<RTGroup[]>([]);
   const [daftarRT, setDaftarRT] = useState<RTDropdown[]>([]);
   const [daftarUsulan, setDaftarUsulan] = useState<Usulan[]>([]);
-  
+
   // State filter kontrol
   const [kataKunci, setKataKunci] = useState('');
   const [rtTerpilih, setRtTerpilih] = useState<string>('semua');
@@ -67,7 +66,7 @@ export default function DasborPetugas() {
   const muatDataAwal = async () => {
     const { data: rts } = await supabase.from('daftar_rt').select('id, no_rt, nama_rt').order('no_rt', { ascending: true });
     const { data: usulans } = await supabase.from('pengajuan_update').select('id, penerima_id, nama_baru, keterangan_baru, status').eq('status', 'PENDING');
-    
+
     if (rts) setDaftarRT(rts);
     if (usulans) setDaftarUsulan(usulans);
   };
@@ -79,12 +78,12 @@ export default function DasborPetugas() {
   // 2. Sinkronisasi Utama: Mengambil data mustahiq dengan filter pencarian dan grup RT
   const muatDataWarga = async () => {
     setLoading(true);
-    let query = supabase.from('penerima_zakat').select(`id, no_urut, nama, keterangan, rt_id, daftar_rt ( no_rt, nama_rt )`);
+    let query = supabase.from('penerima_zakat').select(`id, nama, keterangan, rt_id, daftar_rt ( no_rt, nama_rt )`);
 
     if (kataKunci.trim() !== '') query = query.ilike('nama', `%${kataKunci}%`);
     if (rtTerpilih !== 'semua') query = query.eq('rt_id', parseInt(rtTerpilih));
 
-    const { data, error } = await query.order('rt_id', { ascending: true }).order('no_urut', { ascending: true });
+    const { data, error } = await query.order('rt_id', { ascending: true });
 
     if (!error && data) {
       const mentah = data as unknown as Warga[];
@@ -108,20 +107,21 @@ export default function DasborPetugas() {
   }, [kataKunci, rtTerpilih]);
 
   // 3. OPERASI CRUD: TAMBAH DATA WARGA BARU
-  const handleTambahWarga = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formRT || !formNama || !formNoUrut) return alert('RT, Nomor Urut, dan Nama wajib diisi.');
+ const handleTambahWarga = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!formRT || !formNama) return alert('RT dan Nama wajib diisi.');
 
-    const { error } = await supabase.from('penerima_zakat').insert([
-      { rt_id: parseInt(formRT), no_urut: parseInt(formNoUrut), nama: formNama, keterangan: formKeterangan || null }
-    ]);
+  const { error } = await supabase.from('penerima_zakat').insert([
+    { rt_id: parseInt(formRT), nama: formNama, keterangan: formKeterangan || null }
+  ]);
 
-    if (!error) {
-      setFormNama(''); setFormKeterangan(''); setFormNoUrut('');
-      alert('Data warga berhasil didaftarkan!');
-      muatDataWarga();
-    }
-  };
+  if (!error) {
+    setFormNama(''); setFormKeterangan(''); setFormRT('');
+    alert('Data warga berhasil didaftarkan!');
+    muatDataWarga();
+  }
+};
+
 
   // 4. OPERASI CRUD: SIMPAN EDIT DATA WARGA
   const handleSimpanEdit = async (idWarga: number) => {
@@ -137,16 +137,65 @@ export default function DasborPetugas() {
   };
 
   // 6. VERIFIKASI USULAN: APPROVE & REJECT
+  // 🔥 PERBAIKAN LOGIKA APPROVE: Menangani Update Warga Lama & Insert Warga Baru
   const handleApprove = async (u: Usulan) => {
     if (u.penerima_id) {
-      await supabase.from('penerima_zakat').update({ nama: u.nama_baru, keterangan: u.keterangan_baru }).eq('id', u.penerima_id);
+      // 1. JIKA WARGA LAMA: Lakukan UPDATE data yang sudah ada
+      const { error: errorUpdate } = await supabase
+        .from('penerima_zakat')
+        .update({
+          nama: u.nama_baru,
+          keterangan: u.keterangan_baru
+        })
+        .eq('id', u.penerima_id);
+
+      if (errorUpdate) return alert('Gagal memperbarui data warga lama.');
+    } else {
+      // 2. JIKA WARGA BARU (penerima_id NULL): Lakukan INSERT data baru
+
+      // Mengambil teks ID RT yang sempat kita selipkan di kolom keterangan_baru saat mengajukan
+      // Format teks usulan baru sebelumnya: "[USULAN BARU - RT ID: X] Keterangan Anda"
+      const dapatkanRtId = u.keterangan_baru?.match(/RT ID: (\d+)/);
+      const rtIdTerdeteksi = dapatkanRtId ? parseInt(dapatkanRtId[1]) : null;
+
+      if (!rtIdTerdeteksi) {
+        return alert('Gagal menyetujui: Informasi Wilayah RT usulan baru tidak valid.');
+      }
+
+      // Bersihkan teks tag [USULAN BARU...] agar kolom keterangan di tabel utama tetap rapi
+      const keteranganBersih = u.keterangan_baru
+        ? u.keterangan_baru.replace(/\[USULAN BARU - RT ID: \d+\]\s*/, '')
+        : null;
+     
+
+      // Eksekusi penambahan baris baru ke tabel utama penerima_zakat
+      const { error: errorInsert } = await supabase
+        .from('penerima_zakat')
+        .insert([
+          {
+            rt_id: rtIdTerdeteksi,
+            nama: u.nama_baru,
+            keterangan: keteranganBersih || null
+          }
+        ]);
+
+      if (errorInsert) return alert('Gagal memasukkan data warga baru ke database.');
     }
-    await supabase.from('pengajuan_update').update({ status: 'DISETUJUI' }).eq('id', u.id);
-    muatDataAwal(); muatDataWarga();
+
+    // 3. SETELAH SELESAI (Baik update maupun insert), ubah status pengajuan menjadi DISETUJUI
+    await supabase
+      .from('pengajuan_update')
+      .update({ status: 'DISETUJUI' })
+      .eq('id', u.id);
+
+    // Segarkan ulang seluruh komponen tampilan data di layar petugas
+    muatDataAwal();
+    muatDataWarga();
   };
 
+
   const handleReject = async (idUsulan: number) => {
-    await supabase.from('pengajuan_update').update({ status: 'DITOLAK' }) .eq('id', idUsulan);
+    await supabase.from('pengajuan_update').update({ status: 'DITOLAK' }).eq('id', idUsulan);
     muatDataAwal();
   };
 
@@ -155,14 +204,25 @@ export default function DasborPetugas() {
     document.cookie = "sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
     router.push('/login');
   };
+
+  // Menghitung total keseluruhan warga dari seluruh grup RT yang aktif di layar petugas
+  const totalJiwaKeseluruhan = dataTergrup.reduce((total, grup) => total + grup.warga.length, 0);
+
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-8 min-h-screen bg-gray-50 text-gray-800">
-      
+
       {/* NAVBAR ATAS */}
       <div className="flex justify-between items-center border-b border-gray-200 pb-4 mb-8">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Halaman Kerja Petugas</h1>
-          <p className="text-xs text-gray-500">LAZISNU Desa Badean (Mode Pengelolaan CRUD)</p>
+          <div>
+            
+            <p className="text-xs text-gray-500">LAZISNU Desa Badean (Mode Pengelolaan CRUD)</p>
+            <div className="mt-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md inline-block">
+              📊 Total Basis Data: {totalJiwaKeseluruhan} Jiwa
+            </div>
+          </div>
+
         </div>
         <button
           onClick={handleLogout}
@@ -173,7 +233,7 @@ export default function DasborPetugas() {
       </div>
 
       <div className="space-y-8">
-        
+
         {/* FORMULIR: TAMBAH WARGA BARU LANGSUNG */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
           <h2 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1.5">
@@ -194,17 +254,7 @@ export default function DasborPetugas() {
                 ))}
               </select>
             </div>
-            <div>
-              <label className="block text-[11px] font-bold text-gray-500 mb-1">No Urut RT</label>
-              <input
-                type="number"
-                required
-                placeholder="Contoh: 23"
-                value={formNoUrut}
-                onChange={(e) => setFormNoUrut(e.target.value)}
-                className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900"
-              />
-            </div>
+            
             <div>
               <label className="block text-[11px] font-bold text-gray-500 mb-1">Nama Lengkap</label>
               <input
@@ -296,7 +346,7 @@ export default function DasborPetugas() {
           <div className="space-y-6">
             {dataTergrup.map((grup) => (
               <div key={grup.rt_id} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                
+
                 {/* Header RT */}
                 <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-200 flex justify-between items-center text-xs">
                   <h3 className="font-bold text-gray-800">
@@ -319,10 +369,10 @@ export default function DasborPetugas() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {grup.warga.map((w , i) => (
+                      {grup.warga.map((w, i) => (
                         <tr key={w.id} className="hover:bg-gray-50/50 transition">
                           <td className="p-2.5 text-center font-medium text-gray-400">{i + 1}</td>
-                          
+
                           {/* SUNTING INLINE: NAMA */}
                           <td className="p-2.5">
                             {wargaDiedit === w.id ? (

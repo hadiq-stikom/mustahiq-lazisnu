@@ -7,7 +7,6 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 interface Warga {
   id: number;
-  no_urut: number;
   nama: string;
   keterangan: string | null;
   rt_id: number;
@@ -63,7 +62,7 @@ export default function HalamanUtama() {
       let query = supabase
         .from('penerima_zakat')
         .select(`
-          id, no_urut, nama, keterangan, rt_id,
+          id, nama, keterangan, rt_id,
           daftar_rt ( no_rt, nama_rt )
         `);
 
@@ -141,12 +140,19 @@ export default function HalamanUtama() {
       alert('Gagal mengirimkan usulan.');
     }
   };
+    // Menghitung total keseluruhan warga dari seluruh grup RT yang aktif di layar
+  const totalJiwaKeseluruhan = dataTergrup.reduce((total, grup) => total + grup.warga.length, 0);
+
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 min-h-screen bg-gray-50 text-gray-800">
       {/* KEPALA APLIKASI */}
       <div className="text-center mb-8 bg-linear-to-r from-emerald-800 to-emerald-700 text-white p-6 rounded-2xl shadow-md">
         <h1 className="text-2xl md:text-3xl font-extrabold tracking-wide">LAZISNU DESA BADEAN</h1>
         <p className="text-emerald-100 text-sm mt-1.5 font-medium">Sistem Informasi Transparansi Penerima Zakat Mal</p>
+<div className="mt-3 inline-block bg-white/20 backdrop-blur-xs px-4 py-1 rounded-full text-xs font-bold tracking-wide">
+  📊 Total Mustahiq Terdata: {totalJiwaKeseluruhan} Jiwa
+</div>
+
       </div>
 
       {/* BAR ALAT: CARI, FILTER RT, & TOMBOL USULAN */}
