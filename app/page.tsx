@@ -78,7 +78,7 @@ export default function HalamanUtama() {
 
       const { data, error } = await query
         .order('rt_id', { ascending: true })
-        .order('no_urut', { ascending: true });
+        
 
       if (!error && data) {
         const mentah = data as unknown as Warga[];
