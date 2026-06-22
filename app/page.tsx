@@ -144,7 +144,7 @@ export default function HalamanUtama() {
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 min-h-screen bg-gray-50 text-gray-800">
       {/* KEPALA APLIKASI */}
-      <div className="text-center mb-8 bg-gradient-to-r from-emerald-800 to-emerald-700 text-white p-6 rounded-2xl shadow-md">
+      <div className="text-center mb-8 bg-linear-to-r from-emerald-800 to-emerald-700 text-white p-6 rounded-2xl shadow-md">
         <h1 className="text-2xl md:text-3xl font-extrabold tracking-wide">LAZISNU DESA BADEAN</h1>
         <p className="text-emerald-100 text-sm mt-1.5 font-medium">Sistem Informasi Transparansi Penerima Zakat Mal</p>
       </div>
@@ -222,9 +222,9 @@ export default function HalamanUtama() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {grup.warga.map((w) => (
+                    {grup.warga.map((w , i) => (
                       <tr key={w.id} className="hover:bg-gray-50/50 transition">
-                        <td className="p-3 text-center font-medium text-gray-400">{w.no_urut}</td>
+                        <td className="p-3 text-center font-medium text-gray-400">{i + 1}</td>
                         <td className="p-3 text-gray-900 font-semibold">{w.nama}</td>
                         <td className="p-3 text-gray-500 italic">{w.keterangan || '-'}</td>
                       </tr>

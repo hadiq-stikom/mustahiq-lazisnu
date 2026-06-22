@@ -319,9 +319,9 @@ export default function DasborPetugas() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {grup.warga.map((w) => (
+                      {grup.warga.map((w , i) => (
                         <tr key={w.id} className="hover:bg-gray-50/50 transition">
-                          <td className="p-2.5 text-center font-medium text-gray-400">{w.no_urut}</td>
+                          <td className="p-2.5 text-center font-medium text-gray-400">{i + 1}</td>
                           
                           {/* SUNTING INLINE: NAMA */}
                           <td className="p-2.5">
