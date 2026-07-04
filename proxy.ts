@@ -1,47 +1,52 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 
 export async function proxy(request: NextRequest) {
-  const supabase = createClient(
+  let supabaseResponse = NextResponse.next({ request });
+
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
   );
 
-  // Ambil token dari cookie browser
-  const token = request.cookies.get('sb-access-token')?.value;
+  const { data: { user } } = await supabase.auth.getUser();
 
-  // Jika mencoba akses halaman rahasia tapi kuki kosong, lempar ke halaman login
-  if (!token) {
+  if (!user) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  try {
-    // Verifikasi validitas token langsung ke Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    
-    if (error || !user) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  const role = user.user_metadata?.role;
 
-    const role = user.user_metadata?.role;
-
-    // Aturan halaman Admin
-    if (request.nextUrl.pathname.startsWith('/admin') && role !== 'admin') {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    // Aturan halaman Petugas
-    if (request.nextUrl.pathname.startsWith('/petugas') && role !== 'petugas' && role !== 'admin') {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-  } catch (e) {
+  if (request.nextUrl.pathname.startsWith('/admin') && role !== 'admin') {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  return NextResponse.next();
+  if (request.nextUrl.pathname.startsWith('/bendahara') && role !== 'admin' && role !== 'bendahara') {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  if (request.nextUrl.pathname.startsWith('/petugas') && role !== 'admin' && role !== 'petugas') {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  return supabaseResponse;
 }
 
 export const config = {
-  matcher: ['/petugas/:path*', '/admin/:path*'],
+  matcher: ['/petugas/:path*', '/admin/:path*', '/bendahara/:path*'],
 };

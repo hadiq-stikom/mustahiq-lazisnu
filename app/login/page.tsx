@@ -31,12 +31,6 @@ export default function HalamanLogin() {
             return;
         }
 
-        // 🔥 PERBAIKAN UTAMA: Paksa tulis token ke Cookie Browser agar terbaca oleh proxy.ts
-        const session = data.session;
-        if (session) {
-            document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${session.expires_in}; SameSite=Lax; Secure`;
-        }
-
         // 2. Dapatkan metadata peran (role) akun tersebut
         const role = data.user?.user_metadata?.role;
 
@@ -45,6 +39,8 @@ export default function HalamanLogin() {
             router.push('/admin');
         } else if (role === 'petugas') {
             router.push('/petugas');
+        } else if (role === 'bendahara') {
+            router.push('/bendahara');
         } else {
             await supabase.auth.signOut();
             setPesanError('Akun Anda tidak memiliki hak akses sistem.');
