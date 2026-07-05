@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 import { formatRupiah } from '@/lib/utils';
+import type { PeriodeDistribusi } from '@/lib/types';
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -23,7 +23,6 @@ interface RTGroup {
 }
 
 export default function HalamanUtama() {
-  const router = useRouter();
   const [dataTergrup, setDataTergrup] = useState<RTGroup[]>([]);
   const [daftarRT, setDaftarRT] = useState<{ id: number; no_rt: number; nama_rt: string }[]>([]);
   const [kataKunci, setKataKunci] = useState('');
@@ -38,18 +37,27 @@ export default function HalamanUtama() {
 
   // Transparansi
   const [totalPenerimaan, setTotalPenerimaan] = useState(0);
-  const [totalDistribusi, setTotalDistribusi] = useState(0);
+  const [periodeAktif, setPeriodeAktif] = useState<PeriodeDistribusi | null>(null);
+  const [distribusiPeriode, setDistribusiPeriode] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    const loadTransparansi = async () => {
-      const [{ data: p }, { data: d }] = await Promise.all([
-        supabase.from('penerimaan').select('jumlah'),
-        supabase.from('distribusi').select('jumlah'),
-      ]);
+    const loadSaldo = async () => {
+      const { data: p } = await supabase.from('penerimaan').select('jumlah');
       if (p) setTotalPenerimaan(p.reduce((s, r) => s + (r.jumlah || 0), 0));
-      if (d) setTotalDistribusi(d.reduce((s, r) => s + (r.jumlah || 0), 0));
     };
-    loadTransparansi();
+    loadSaldo();
+  }, []);
+
+  useEffect(() => {
+    const loadPeriode = async () => {
+      const { data } = await supabase.from('periode_distribusi').select('*').eq('status', 'AKTIF').single();
+      if (data) {
+        setPeriodeAktif(data);
+        const { data: dists } = await supabase.from('distribusi').select('mustahiq_id').eq('periode_id', data.id);
+        if (dists) setDistribusiPeriode(new Set(dists.map((d) => d.mustahiq_id)));
+      }
+    };
+    loadPeriode();
   }, []);
 
   useEffect(() => {
@@ -97,6 +105,11 @@ export default function HalamanUtama() {
   };
 
   const totalJiwa = dataTergrup.reduce((t, g) => t + g.warga.length, 0);
+  const resumePerRT = dataTergrup.map((grup) => ({
+    ...grup,
+    sudahTerima: grup.warga.filter((w) => distribusiPeriode.has(w.id)).length,
+    belumTerima: grup.warga.filter((w) => !distribusiPeriode.has(w.id)).length,
+  }));
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 min-h-screen bg-gray-50 text-gray-800">
@@ -104,21 +117,56 @@ export default function HalamanUtama() {
       <div className="text-center mb-6 bg-linear-to-r from-emerald-800 to-emerald-700 text-white p-6 rounded-2xl shadow-md">
         <h1 className="text-2xl md:text-3xl font-extrabold tracking-wide">LAZISNU DESA BADEAN</h1>
         <p className="text-emerald-100 text-sm mt-1 font-medium">Sistem Informasi Transparansi Penerima Zakat Mal</p>
-        <div className="mt-3 inline-block bg-white/20 backdrop-blur-xs px-4 py-1 rounded-full text-xs font-bold">
-          📊 Total Mustahiq Terdata: {totalJiwa} Jiwa
+      </div>
+
+      {/* SALDO & TOTAL MUSTAHIQ */}
+      <div className="mb-6">
+        <div className="bg-white border border-emerald-200 rounded-xl p-4 shadow-sm">
+          <p className="text-xs text-gray-500 font-medium">💰 Saldo</p>
+          <p className="text-lg font-bold text-emerald-700">{formatRupiah(totalPenerimaan)}</p>
+        </div>
+        <div className="mt-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 shadow-sm">
+          <p className="text-sm font-bold text-emerald-800">📊 Total Mustahiq Terdata: {totalJiwa} Jiwa</p>
         </div>
       </div>
 
-      {/* TRANSPARANSI KAS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-        <div className="bg-white border border-emerald-200 rounded-xl p-4 shadow-sm">
-          <p className="text-xs text-gray-500 font-medium">💰 Total Penerimaan Dana</p>
-          <p className="text-lg font-bold text-emerald-700">{formatRupiah(totalPenerimaan)}</p>
+      {/* PERIODE & RESUME PER RT */}
+      {periodeAktif && (
+        <div className="mb-6 bg-white border border-blue-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-blue-600 font-bold text-sm">📅 Periode: {periodeAktif.nama}</span>
+            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">{new Date(periodeAktif.tanggal_buka).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs md:text-sm">
+              <thead>
+                <tr className="bg-gray-50/70 text-gray-500 border-b border-gray-100 uppercase font-semibold text-[11px] tracking-wider">
+                  <th className="p-2">RT</th>
+                  <th className="p-2 text-center">Total Jiwa</th>
+                  <th className="p-2 text-center text-green-600">Sudah Terima</th>
+                  <th className="p-2 text-center text-red-500">Belum Terima</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {resumePerRT.map((grup) => (
+                  <tr key={grup.rt_id} className="hover:bg-gray-50/50 transition">
+                    <td className="p-2 font-semibold text-gray-900">RT.{grup.no_rt} {grup.nama_rt}</td>
+                    <td className="p-2 text-center font-medium text-gray-500">{grup.warga.length}</td>
+                    <td className="p-2 text-center font-semibold text-green-600">{grup.sudahTerima}</td>
+                    <td className="p-2 text-center font-semibold text-red-500">{grup.belumTerima}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div className="bg-white border border-orange-200 rounded-xl p-4 shadow-sm">
-          <p className="text-xs text-gray-500 font-medium">🎯 Total Penyaluran Dana</p>
-          <p className="text-lg font-bold text-orange-600">{formatRupiah(totalDistribusi)}</p>
-        </div>
+      )}
+
+      <div className="mb-6">
+        <button onClick={() => setBukaModal(true)}
+          className="w-full px-5 py-3 bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-700 transition flex items-center justify-center gap-1.5">
+          ➕ Usulkan Warga Baru
+        </button>
       </div>
 
       {/* CONTROLS */}
@@ -135,14 +183,6 @@ export default function HalamanUtama() {
             {daftarRT.map((rt) => (<option key={rt.id} value={rt.id}>📍 RT.{rt.no_rt} {rt.nama_rt}</option>))}
           </select>
         </div>
-        <button onClick={() => setBukaModal(true)}
-          className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-700 transition flex items-center justify-center gap-1.5">
-          ➕ Usulkan Warga Baru
-        </button>
-        <button onClick={() => router.push('/login')}
-          className="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-medium shadow-sm hover:bg-gray-50 transition">
-          Petugas
-        </button>
       </div>
 
       {/* DATA MUSTAHIQ */}
