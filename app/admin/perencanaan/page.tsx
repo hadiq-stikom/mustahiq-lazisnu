@@ -20,6 +20,7 @@ export default function PerencanaanPage() {
   const [jumlahPerJiwa, setJumlahPerJiwa] = useState('');
   const [bentuk, setBentuk] = useState('TUNAI');
 
+  const [menyimpan, setMenyimpan] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({ show: false, message: '', type: 'success' });
   const closeToast = useCallback(() => setToast((prev) => ({ ...prev, show: false })), []);
@@ -118,11 +119,13 @@ export default function PerencanaanPage() {
     fd.set('bentuk', bentuk);
     fd.set('rt_ids', JSON.stringify(Array.from(rtDipilih)));
 
+    setMenyimpan(true);
     try {
       await bukaPeriodeDistribusi(fd);
       setToast({ show: true, message: 'Periode distribusi berhasil dibuka!', type: 'success' });
       setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
+      setMenyimpan(false);
       setToast({ show: true, message: err instanceof Error ? err.message : 'Gagal', type: 'error' });
     }
   };
@@ -242,9 +245,9 @@ export default function PerencanaanPage() {
       {/* TOMBOL */}
       {!periodeAktif && daftarRT.length > 0 && (
         <button onClick={handleBukaPeriode}
-          disabled={totalMustahiqTerpilih === 0 || !jumlahPerJiwa}
+          disabled={totalMustahiqTerpilih === 0 || !jumlahPerJiwa || menyimpan}
           className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition">
-          🚀 Buka Periode Distribusi Baru
+          {menyimpan ? '⏳ Menyimpan...' : '🚀 Buka Periode Distribusi Baru'}
         </button>
       )}
 

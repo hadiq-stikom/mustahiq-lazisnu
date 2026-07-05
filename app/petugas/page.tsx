@@ -33,6 +33,7 @@ export default function DasborPetugas() {
   const [distSudah, setDistSudah] = useState<Set<number>>(new Set());
   const [distFilterRT, setDistFilterRT] = useState('semua');
   const [distDaftarRT, setDistDaftarRT] = useState<{ id: number; no_rt: number; nama_rt: string }[]>([]);
+  const [loadingCentang, setLoadingCentang] = useState<Set<number>>(new Set());
 
   // Initial load
   useEffect(() => {
@@ -182,7 +183,8 @@ export default function DasborPetugas() {
 
   // Toggle centang distribusi
   const handleCentang = async (mustahiqId: number) => {
-    if (!periodeAktif) return;
+    if (!periodeAktif || loadingCentang.has(mustahiqId)) return;
+    setLoadingCentang((prev) => new Set(prev).add(mustahiqId));
     try {
       await centangDistribusi(mustahiqId, periodeAktif.id);
       setDistSudah((prev) => {
@@ -193,6 +195,12 @@ export default function DasborPetugas() {
       });
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Gagal');
+    } finally {
+      setLoadingCentang((prev) => {
+        const next = new Set(prev);
+        next.delete(mustahiqId);
+        return next;
+      });
     }
   };
 
@@ -407,12 +415,15 @@ export default function DasborPetugas() {
                                 </td>
                                 <td className="p-2.5 text-center">
                                   <button onClick={() => handleCentang(w.id)}
+                                    disabled={loadingCentang.has(w.id)}
                                     className={`px-3 py-1 rounded text-[10px] font-bold transition ${
-                                      sudah
-                                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                                        : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                      loadingCentang.has(w.id)
+                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        : sudah
+                                          ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                          : 'bg-emerald-600 text-white hover:bg-emerald-700'
                                     }`}>
-                                    {sudah ? 'Batal' : 'Centang'}
+                                    {loadingCentang.has(w.id) ? '⏳ ...' : (sudah ? 'Batal' : 'Centang')}
                                   </button>
                                 </td>
                               </tr>
