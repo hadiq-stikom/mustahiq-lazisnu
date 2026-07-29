@@ -508,9 +508,9 @@ export default function BendaharaPage() {
                   ))}
                 </tbody>
 
-                {/* Print View Body (ALL Data Filtered) */}
+                {/* Print View Body (ALL Data Filtered - Urut Kronologis Tgl 1 -> 31) */}
                 <tbody className="divide-y divide-gray-200 hidden print:table-row-group">
-                  {dataFiltered.map((item) => (
+                  {[...dataFiltered].sort((a, b) => a.tanggal.localeCompare(b.tanggal)).map((item) => (
                     <tr key={`print-${item.id}`}>
                       <td className="p-2 text-gray-700 whitespace-nowrap font-medium">{formatTanggalSingkat(item.tanggal)}</td>
                       <td className="p-2">

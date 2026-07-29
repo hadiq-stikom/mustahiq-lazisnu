@@ -241,7 +241,8 @@ export default function AdminTransaksiPage() {
                     <th className="p-3 text-center">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                {/* Screen View Body */}
+                <tbody className="divide-y divide-gray-100 print:hidden">
                   {paginatedItems.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50 transition">
                       <td className="p-3 text-gray-700 font-medium whitespace-nowrap">{formatTanggalSingkat(item.tanggal)}</td>
@@ -263,6 +264,30 @@ export default function AdminTransaksiPage() {
                         <button onClick={() => setConfirmHapusItem(item)}
                           className="text-red-500 hover:text-red-700 text-[10px] font-bold transition">Hapus</button>
                       </td>
+                    </tr>
+                  ))}
+                </tbody>
+
+                {/* Print View Body (ALL Items Filtered - Urut Kronologis Tgl 1 -> 31) */}
+                <tbody className="divide-y divide-gray-200 hidden print:table-row-group">
+                  {[...filtered].sort((a, b) => a.tanggal.localeCompare(b.tanggal)).map((item) => (
+                    <tr key={`print-${item.id}`}>
+                      <td className="p-2 text-gray-700 font-medium whitespace-nowrap">{formatTanggalSingkat(item.tanggal)}</td>
+                      <td className="p-2">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          item.jenis === 'PEMASUKAN' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {item.jenis === 'PEMASUKAN' ? '↑ Masuk' : '↓ Keluar'}
+                        </span>
+                      </td>
+                      <td className="p-2 text-gray-700">
+                        <span className="font-semibold">{item.label}</span>
+                        {item.keterangan && <span className="text-gray-400 ml-1">— {item.keterangan}</span>}
+                      </td>
+                      <td className={`p-2 text-right font-bold ${item.jenis === 'PEMASUKAN' ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {item.jenis === 'PEMASUKAN' ? '+' : '−'}{formatRupiah(item.jumlah)}
+                      </td>
+                      <td className="p-2 text-center no-print">—</td>
                     </tr>
                   ))}
                 </tbody>
