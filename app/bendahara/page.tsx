@@ -3,11 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
-import { tambahTransaksi, simpanSaldoBulanBendahara } from '@/lib/actions/bendahara';
+import { tambahTransaksi, simpanSaldoBulanBendahara, hapusTransaksiBendahara } from '@/lib/actions/bendahara';
 import { formatRupiah, formatTanggalSingkat, formatNamaBulan } from '@/lib/utils';
+import ConfirmModal from '@/components/ConfirmModal';
+import Pagination from '@/components/Pagination';
 
 interface TransaksiItem {
   id: string;
+  asliId: number;
+  tabel: 'penerimaan' | 'pengeluaran' | 'distribusi';
   tanggal: string;
   jenis: 'PEMASUKAN' | 'PENGELUARAN';
   label: string;
@@ -23,6 +27,8 @@ const bulanOptions = [
   { value: '09', label: 'September' }, { value: '10', label: 'Oktober' },
   { value: '11', label: 'November' }, { value: '12', label: 'Desember' },
 ];
+
+const PAGE_SIZE = 15;
 
 function Spinner({ size = 4 }: { size?: number }) {
   return (
@@ -56,9 +62,11 @@ export default function BendaharaPage() {
   const [saldoTersimpan, setSaldoTersimpan] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Filter bulan
+  // Filter & Pagination
   const [filterTahun, setFilterTahun] = useState(new Date().getFullYear().toString());
   const [filterBulan, setFilterBulan] = useState(String(new Date().getMonth() + 1).padStart(2, '0'));
+  const [page, setPage] = useState(1);
+  const [confirmHapusItem, setConfirmHapusItem] = useState<TransaksiItem | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -71,6 +79,8 @@ export default function BendaharaPage() {
     const items: TransaksiItem[] = [
       ...(penerimaan.data ?? []).map((r) => ({
         id: `p-${r.id}`,
+        asliId: r.id,
+        tabel: 'penerimaan' as const,
         tanggal: r.tanggal,
         jenis: 'PEMASUKAN' as const,
         label: r.sumber === 'ZAKAT_MAL' ? 'Zakat Mal' : 'Sedekah / Infak',
@@ -79,6 +89,8 @@ export default function BendaharaPage() {
       })),
       ...(pengeluaran.data ?? []).map((r) => ({
         id: `o-${r.id}`,
+        asliId: r.id,
+        tabel: 'pengeluaran' as const,
         tanggal: r.tanggal,
         jenis: 'PENGELUARAN' as const,
         label: r.kategori.replace(/_/g, ' '),
@@ -94,6 +106,8 @@ export default function BendaharaPage() {
         }
         return {
           id: `d-${r.id}`,
+          asliId: r.id,
+          tabel: 'distribusi' as const,
           tanggal: r.tanggal,
           jenis: 'PENGELUARAN' as const,
           label: periodeNama ? `Distribusi (${periodeNama})` : 'Distribusi Zakat',
@@ -112,6 +126,7 @@ export default function BendaharaPage() {
   }, []);
 
   useEffect(() => {
+    setPage(1);
     const loadSaldo = async () => {
       const bulan = `${filterTahun}-${filterBulan}`;
 
@@ -162,6 +177,20 @@ export default function BendaharaPage() {
     }
   };
 
+  const handleEksekusiHapus = async () => {
+    if (!confirmHapusItem) return;
+    const item = confirmHapusItem;
+    setConfirmHapusItem(null);
+    try {
+      if (item.tabel === 'penerimaan' || item.tabel === 'pengeluaran') {
+        await hapusTransaksiBendahara(item.asliId, item.tabel);
+      }
+      loadData();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Gagal menghapus');
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     document.cookie = 'sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
@@ -172,6 +201,9 @@ export default function BendaharaPage() {
   const dataFiltered = data.filter((d) => d.tanggal.startsWith(bulanFilter));
   const totalPemasukan = dataFiltered.filter((d) => d.jenis === 'PEMASUKAN').reduce((s, r) => s + r.jumlah, 0);
   const totalPengeluaran = dataFiltered.filter((d) => d.jenis === 'PENGELUARAN').reduce((s, r) => s + r.jumlah, 0);
+
+  const totalPages = Math.ceil(dataFiltered.length / PAGE_SIZE);
+  const paginatedData = dataFiltered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const tahunList = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
 
@@ -409,41 +441,77 @@ export default function BendaharaPage() {
             <p className="text-sm text-gray-400">Belum ada transaksi di bulan ini.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="bg-gray-50 text-gray-500 uppercase text-[10px] tracking-wider border-b border-gray-100">
-                  <th className="p-3">Tanggal</th>
-                  <th className="p-3">Jenis</th>
-                  <th className="p-3">Keterangan</th>
-                  <th className="p-3 text-right">Jumlah</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {dataFiltered.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 transition">
-                    <td className="p-3 text-gray-700 whitespace-nowrap font-medium">{formatTanggalSingkat(item.tanggal)}</td>
-                    <td className="p-3">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        item.jenis === 'PEMASUKAN' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                      }`}>
-                        {item.jenis === 'PEMASUKAN' ? '↑ Masuk' : '↓ Keluar'}
-                      </span>
-                    </td>
-                    <td className="p-3 text-gray-700">
-                      <span className="font-semibold">{item.label}</span>
-                      {item.keterangan && <span className="text-gray-400 ml-1">— {item.keterangan}</span>}
-                    </td>
-                    <td className={`p-3 text-right font-bold ${item.jenis === 'PEMASUKAN' ? 'text-emerald-600' : 'text-red-600'}`}>
-                      {item.jenis === 'PEMASUKAN' ? '+' : '−'}{formatRupiah(item.jumlah)}
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 uppercase text-[10px] tracking-wider border-b border-gray-100">
+                    <th className="p-3">Tanggal</th>
+                    <th className="p-3">Jenis</th>
+                    <th className="p-3">Keterangan</th>
+                    <th className="p-3 text-right">Jumlah</th>
+                    <th className="p-3 text-center">Aksi</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {paginatedData.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50 transition">
+                      <td className="p-3 text-gray-700 whitespace-nowrap font-medium">{formatTanggalSingkat(item.tanggal)}</td>
+                      <td className="p-3">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          item.jenis === 'PEMASUKAN' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {item.jenis === 'PEMASUKAN' ? '↑ Masuk' : '↓ Keluar'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-gray-700">
+                        <span className="font-semibold">{item.label}</span>
+                        {item.keterangan && <span className="text-gray-400 ml-1">— {item.keterangan}</span>}
+                      </td>
+                      <td className={`p-3 text-right font-bold ${item.jenis === 'PEMASUKAN' ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {item.jenis === 'PEMASUKAN' ? '+' : '−'}{formatRupiah(item.jumlah)}
+                      </td>
+                      <td className="p-3 text-center">
+                        {item.tabel !== 'distribusi' ? (
+                          <button
+                            onClick={() => setConfirmHapusItem(item)}
+                            className="text-red-500 hover:text-red-700 text-[10px] font-bold transition"
+                          >
+                            Hapus
+                          </button>
+                        ) : (
+                          <span className="text-gray-300 text-[10px]">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* PAGINATION */}
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={dataFiltered.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={(p) => setPage(p)}
+            />
+          </>
         )}
       </div>
+
+      {/* CONFIRMATION MODAL HAPUS */}
+      <ConfirmModal
+        open={confirmHapusItem !== null}
+        title="Hapus Transaksi Keuangan"
+        message={`Apakah Anda yakin ingin menghapus data ${confirmHapusItem?.label || 'transaksi'} senilai ${confirmHapusItem ? formatRupiah(confirmHapusItem.jumlah) : ''}?`}
+        confirmLabel="Hapus Transaksi"
+        cancelLabel="Batal"
+        variant="danger"
+        onConfirm={handleEksekusiHapus}
+        onCancel={() => setConfirmHapusItem(null)}
+      />
     </div>
   );
 }

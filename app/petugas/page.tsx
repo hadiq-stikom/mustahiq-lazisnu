@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 import { centangDistribusi } from '@/lib/actions/petugas';
 import type { Mustahiq, RTGroup, PengajuanUpdate, PeriodeDistribusi } from '@/lib/types';
+import ConfirmModal from '@/components/ConfirmModal';
 
 type Tab = 'mustahiq' | 'distribusi';
 
@@ -26,6 +27,7 @@ export default function DasborPetugas() {
   const [wargaDiedit, setWargaDiedit] = useState<number | null>(null);
   const [editNama, setEditNama] = useState('');
   const [editKeterangan, setEditKeterangan] = useState('');
+  const [confirmHapusId, setConfirmHapusId] = useState<number | null>(null);
 
   // Tab: distribusi
   const [periodeAktif, setPeriodeAktif] = useState<PeriodeDistribusi | null>(null);
@@ -148,9 +150,10 @@ export default function DasborPetugas() {
     if (!error) { setWargaDiedit(null); window.location.reload(); }
   };
 
-  const handleHapus = async (id: number) => {
-    if (!confirm('Hapus data warga ini?')) return;
-    const { error } = await supabase.from('penerima_zakat').delete().eq('id', id);
+  const handleHapusKonfirmasi = async () => {
+    if (!confirmHapusId) return;
+    const { error } = await supabase.from('penerima_zakat').delete().eq('id', confirmHapusId);
+    setConfirmHapusId(null);
     if (!error) window.location.reload();
   };
 
@@ -343,7 +346,7 @@ export default function DasborPetugas() {
                                   <button onClick={() => { setWargaDiedit(w.id); setEditNama(w.nama); setEditKeterangan(w.keterangan || ''); }}
                                     className="text-emerald-700 hover:text-emerald-900 font-bold text-[10px] transition">Edit</button>
                                   <span className="text-gray-200">|</span>
-                                  <button onClick={() => handleHapus(w.id)}
+                                  <button onClick={() => setConfirmHapusId(w.id)}
                                     className="text-red-500 hover:text-red-700 font-bold text-[10px] transition">Hapus</button>
                                 </div>
                               )}
@@ -483,6 +486,17 @@ export default function DasborPetugas() {
           )}
         </div>
       )}
+      {/* CONFIRMATION MODAL HAPUS */}
+      <ConfirmModal
+        open={confirmHapusId !== null}
+        title="Hapus Data Mustahiq"
+        message="Apakah Anda yakin ingin menghapus data warga ini?"
+        confirmLabel="Hapus Data"
+        cancelLabel="Batal"
+        variant="danger"
+        onConfirm={handleHapusKonfirmasi}
+        onCancel={() => setConfirmHapusId(null)}
+      />
     </div>
   );
 }

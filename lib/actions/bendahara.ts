@@ -44,6 +44,23 @@ export async function tambahTransaksi(formData: FormData) {
   revalidatePath('/');
 }
 
+export async function hapusTransaksiBendahara(id: number, jenis: 'penerimaan' | 'pengeluaran') {
+  await requireBendahara();
+  const supabase = await createServerSupabase();
+
+  if (jenis === 'penerimaan') {
+    const { error } = await supabase.from('penerimaan').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from('pengeluaran').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+  }
+
+  revalidatePath('/bendahara');
+  revalidatePath('/admin');
+  revalidatePath('/');
+}
+
 export async function simpanSaldoBulanBendahara(bulan: string) {
   const user = await requireBendahara();
   const supabase = await createServerSupabase();

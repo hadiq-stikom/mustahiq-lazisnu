@@ -25,28 +25,42 @@ export async function proxy(request: NextRequest) {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
+  const pathname = request.nextUrl.pathname;
+  const role = user?.user_metadata?.role;
 
-  if (!user) {
+  // Jika belum login & mencoba mengakses route terproteksi
+  if (!user && (pathname.startsWith('/admin') || pathname.startsWith('/bendahara') || pathname.startsWith('/petugas'))) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  const role = user.user_metadata?.role;
-
-  if (request.nextUrl.pathname.startsWith('/admin') && role !== 'admin') {
-    return NextResponse.redirect(new URL('/login', request.url));
+  // Jika sudah login & mencoba membuka /login, alihkan ke dashboard role masing-masing
+  if (user && pathname === '/login') {
+    if (role === 'admin') return NextResponse.redirect(new URL('/admin', request.url));
+    if (role === 'bendahara') return NextResponse.redirect(new URL('/bendahara', request.url));
+    if (role === 'petugas') return NextResponse.redirect(new URL('/petugas', request.url));
   }
 
-  if (request.nextUrl.pathname.startsWith('/bendahara') && role !== 'admin' && role !== 'bendahara') {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
+  // Hak Akses Role
+  if (user) {
+    if (pathname.startsWith('/admin') && role !== 'admin') {
+      const target = role === 'bendahara' ? '/bendahara' : role === 'petugas' ? '/petugas' : '/';
+      return NextResponse.redirect(new URL(target, request.url));
+    }
 
-  if (request.nextUrl.pathname.startsWith('/petugas') && role !== 'admin' && role !== 'petugas') {
-    return NextResponse.redirect(new URL('/login', request.url));
+    if (pathname.startsWith('/bendahara') && role !== 'admin' && role !== 'bendahara') {
+      const target = role === 'petugas' ? '/petugas' : '/';
+      return NextResponse.redirect(new URL(target, request.url));
+    }
+
+    if (pathname.startsWith('/petugas') && role !== 'admin' && role !== 'petugas') {
+      const target = role === 'bendahara' ? '/bendahara' : '/';
+      return NextResponse.redirect(new URL(target, request.url));
+    }
   }
 
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ['/petugas/:path*', '/admin/:path*', '/bendahara/:path*'],
+  matcher: ['/login', '/petugas/:path*', '/admin/:path*', '/bendahara/:path*'],
 };

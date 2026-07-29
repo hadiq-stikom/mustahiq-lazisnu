@@ -99,3 +99,34 @@ body {
   border-radius: 0.875rem;
   box-shadow: var(--card-shadow-md);
 }
+
+/* ── Print Stylesheet ── */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  aside, header, nav, button:not(.print-keep), .no-print {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .shadow-sm, .shadow-md, .shadow-2xl {
+    box-shadow: none !important;
+  }
+
+  .border {
+    border-color: #d1d5db !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+}

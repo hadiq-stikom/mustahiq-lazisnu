@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { formatRupiah } from '@/lib/utils';
 import { simpanSaldoBulanan } from '@/lib/actions/admin';
+import FinancialTrendChart from '@/components/admin/FinancialTrendChart';
 
 interface Stats {
   totalMustahiq: number;
@@ -263,35 +264,38 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
-        </>
-      )}
 
-      {/* ── PENERIMAAN PER SUMBER ── */}
-      {stats && stats.penerimaanPerSumber.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-          <h2 className="text-sm font-bold text-gray-900 mb-4">📊 Penerimaan Per Sumber</h2>
-          <div className="space-y-3">
-            {stats.penerimaanPerSumber.map((s) => {
-              const pct = stats.totalPenerimaan > 0 ? Math.round((s.total / stats.totalPenerimaan) * 100) : 0;
-              return (
-                <div key={s.sumber}>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm text-gray-700 font-medium">
-                      {s.sumber === 'ZAKAT_MAL' ? '🕌 Zakat Mal' : '🤲 Sedekah / Infak'}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">{pct}%</span>
-                      <span className="text-sm font-bold text-gray-900">{formatRupiah(s.total)}</span>
+          {/* ── FINANCIAL TREND CHART ── */}
+          <FinancialTrendChart />
+
+          {/* ── PENERIMAAN PER SUMBER ── */}
+          {stats.penerimaanPerSumber.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+              <h2 className="text-sm font-bold text-gray-900 mb-4">📊 Penerimaan Per Sumber</h2>
+              <div className="space-y-3">
+                {stats.penerimaanPerSumber.map((s) => {
+                  const pct = stats.totalPenerimaan > 0 ? Math.round((s.total / stats.totalPenerimaan) * 100) : 0;
+                  return (
+                    <div key={s.sumber}>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm text-gray-700 font-medium">
+                          {s.sumber === 'ZAKAT_MAL' ? '🕌 Zakat Mal' : '🤲 Sedekah / Infak'}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400">{pct}%</span>
+                          <span className="text-sm font-bold text-gray-900">{formatRupiah(s.total)}</span>
+                        </div>
+                      </div>
+                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                      </div>
                     </div>
-                  </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
