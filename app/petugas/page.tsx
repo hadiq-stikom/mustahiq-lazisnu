@@ -318,40 +318,30 @@ export default function DasborPetugas() {
               <p className="text-sm text-gray-400">Tidak ada data mustahiq.</p>
             </div>
           ) : (
-            <div className="space-y-4 animate-fade-in print:grid print:grid-cols-2 print:gap-4 print:space-y-0 print:items-start">
+            <div className="space-y-4 animate-fade-in print:block print:columns-2 print:gap-3 print:space-y-3">
               {dataTergrup.map((grup) => (
-                <div key={grup.rt_id} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden break-inside-avoid">
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-3 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="font-bold text-sm text-emerald-900">RT.{grup.no_rt} &mdash; {grup.nama_rt}</h3>
-                    <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-[10px] font-bold">{grup.warga.length} Jiwa</span>
+                <div key={grup.rt_id} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden print:break-inside-avoid-page print:mb-3 print:border-gray-300 print:shadow-none">
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-2 border-b border-gray-200 flex justify-between items-center print:py-1.5 print:bg-emerald-50">
+                    <h3 className="font-bold text-xs text-emerald-900 print:text-xs">RT.{grup.no_rt} &mdash; {grup.nama_rt}</h3>
+                    <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] font-bold">{grup.warga.length} Jiwa</span>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
-                        <tr className="bg-gray-50 text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-100">
-                          <th className="p-3 w-10 text-center">No</th>
-                          <th className="p-3">Nama</th>
-                          <th className="p-3">Keterangan</th>
-                          <th className="p-3 text-center no-print">Aksi</th>
+                        <tr className="bg-gray-50 text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-100 print:bg-gray-100">
+                          <th className="p-2.5 print:p-1 w-8 text-center">No</th>
+                          <th className="p-2.5 print:p-1">Nama</th>
+                          <th className="p-2.5 print:p-1">Keterangan</th>
+                          <th className="p-2.5 text-center no-print">Aksi</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-50">
+                      <tbody className="divide-y divide-gray-50 print:divide-gray-200">
                         {grup.warga.map((w, i) => (
                           <tr key={w.id} className="hover:bg-gray-50 transition">
-                            <td className="p-3 text-center text-gray-400 font-medium">{i + 1}</td>
-                            <td className="p-3">
-                              {wargaDiedit === w.id ? (
-                                <input type="text" value={editNama} onChange={(e) => setEditNama(e.target.value)}
-                                  className="px-2 py-1.5 border border-gray-300 rounded-lg w-full text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                              ) : <span className="font-semibold text-gray-900">{w.nama}</span>}
-                            </td>
-                            <td className="p-3">
-                              {wargaDiedit === w.id ? (
-                                <input type="text" value={editKeterangan} onChange={(e) => setEditKeterangan(e.target.value)}
-                                  className="px-2 py-1.5 border border-gray-300 rounded-lg w-full text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                              ) : <span className="text-gray-500 italic">{w.keterangan || '—'}</span>}
-                            </td>
-                            <td className="p-3 text-center no-print">
+                            <td className="p-2.5 print:p-1 text-center text-gray-400 font-medium">{i + 1}</td>
+                            <td className="p-2.5 print:p-1 font-semibold text-gray-900 print:text-[11px]">{w.nama}</td>
+                            <td className="p-2.5 print:p-1 text-gray-500 italic print:text-[10px]">{w.keterangan || '—'}</td>
+                            <td className="p-2.5 text-center no-print">
                               {wargaDiedit === w.id ? (
                                 <div className="flex justify-center gap-1.5">
                                   <button onClick={() => handleSimpanEdit(w.id)}

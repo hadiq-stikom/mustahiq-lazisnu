@@ -125,8 +125,13 @@ body {
     border-color: #d1d5db !important;
   }
 
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
   @page {
     size: A4;
-    margin: 1.5cm;
+    margin: 1cm 1.2cm;
   }
 }

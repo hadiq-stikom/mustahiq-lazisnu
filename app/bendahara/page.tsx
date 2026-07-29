@@ -473,7 +473,8 @@ export default function BendaharaPage() {
                     <th className="p-3 text-center no-print">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                {/* Screen View Body (Paginated) */}
+                <tbody className="divide-y divide-gray-50 print:hidden">
                   {paginatedData.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50 transition">
                       <td className="p-3 text-gray-700 whitespace-nowrap font-medium">{formatTanggalSingkat(item.tanggal)}</td>
@@ -503,6 +504,30 @@ export default function BendaharaPage() {
                           <span className="text-gray-300 text-[10px]">—</span>
                         )}
                       </td>
+                    </tr>
+                  ))}
+                </tbody>
+
+                {/* Print View Body (ALL Data Filtered) */}
+                <tbody className="divide-y divide-gray-200 hidden print:table-row-group">
+                  {dataFiltered.map((item) => (
+                    <tr key={`print-${item.id}`}>
+                      <td className="p-2 text-gray-700 whitespace-nowrap font-medium">{formatTanggalSingkat(item.tanggal)}</td>
+                      <td className="p-2">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          item.jenis === 'PEMASUKAN' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {item.jenis === 'PEMASUKAN' ? '↑ Masuk' : '↓ Keluar'}
+                        </span>
+                      </td>
+                      <td className="p-2 text-gray-700">
+                        <span className="font-semibold">{item.label}</span>
+                        {item.keterangan && <span className="text-gray-400 ml-1">— {item.keterangan}</span>}
+                      </td>
+                      <td className={`p-2 text-right font-bold ${item.jenis === 'PEMASUKAN' ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {item.jenis === 'PEMASUKAN' ? '+' : '−'}{formatRupiah(item.jumlah)}
+                      </td>
+                      <td className="p-2 text-center no-print">—</td>
                     </tr>
                   ))}
                 </tbody>
