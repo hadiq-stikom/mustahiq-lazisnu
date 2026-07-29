@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/utils/supabase';
-import { hapusPenerimaan } from '@/lib/actions/admin';
-import { hapusPengeluaran } from '@/lib/actions/admin';
+import { hapusPenerimaan, hapusPengeluaran, hapusDistribusi } from '@/lib/actions/admin';
 import { formatRupiah, formatTanggalSingkat } from '@/lib/utils';
 
 interface TransaksiItem {
@@ -46,9 +45,10 @@ export default function AdminTransaksiPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const [penerimaan, pengeluaran] = await Promise.all([
+    const [penerimaan, pengeluaran, distribusi] = await Promise.all([
       supabase.from('penerimaan').select('*').order('created_at', { ascending: false }),
       supabase.from('pengeluaran').select('*').order('created_at', { ascending: false }),
+      supabase.from('distribusi').select('*, periode_distribusi(nama), penerima_zakat(nama)').order('created_at', { ascending: false }),
     ]);
 
     const items: TransaksiItem[] = [
@@ -72,6 +72,24 @@ export default function AdminTransaksiPage() {
         jumlah: r.jumlah,
         keterangan: r.deskripsi,
       })),
+      ...(distribusi.data ?? []).map((r) => {
+        const periodeNama = (r.periode_distribusi as { nama: string } | null)?.nama;
+        const mustahiqNama = (r.penerima_zakat as { nama: string } | null)?.nama;
+        let ket = r.keterangan || '';
+        if (mustahiqNama) {
+          ket = ket ? `${mustahiqNama} - ${ket}` : mustahiqNama;
+        }
+        return {
+          id: `d-${r.id}`,
+          asliId: r.id,
+          tabel: 'distribusi',
+          tanggal: r.tanggal,
+          jenis: 'PENGELUARAN' as const,
+          label: periodeNama ? `Distribusi (${periodeNama})` : 'Distribusi',
+          jumlah: r.jumlah,
+          keterangan: ket || null,
+        };
+      }),
     ].sort((a, b) => b.tanggal.localeCompare(a.tanggal) || a.id.localeCompare(b.id));
 
     setData(items);
@@ -100,6 +118,8 @@ export default function AdminTransaksiPage() {
     try {
       if (item.tabel === 'penerimaan') {
         await hapusPenerimaan(item.asliId);
+      } else if (item.tabel === 'distribusi') {
+        await hapusDistribusi(item.asliId);
       } else {
         await hapusPengeluaran(item.asliId);
       }

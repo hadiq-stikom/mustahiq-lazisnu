@@ -42,5 +42,6 @@ export async function centangDistribusi(mustahiq_id: number, periode_id: number)
 
   revalidatePath('/petugas');
   revalidatePath('/admin/distribusi');
+  revalidatePath('/bendahara');
   revalidatePath('/');
 }

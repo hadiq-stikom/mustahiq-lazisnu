@@ -75,6 +75,7 @@ export async function hapusDistribusi(id: number) {
   const { error } = await supabase.from('distribusi').delete().eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/admin/distribusi');
+  revalidatePath('/bendahara');
   revalidatePath('/');
 }
 

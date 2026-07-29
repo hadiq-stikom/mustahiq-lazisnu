@@ -52,9 +52,10 @@ export default function BendaharaPage() {
 
   const loadData = async () => {
     setLoading(true);
-    const [penerimaan, pengeluaran] = await Promise.all([
+    const [penerimaan, pengeluaran, distribusi] = await Promise.all([
       supabase.from('penerimaan').select('*').order('created_at', { ascending: false }),
       supabase.from('pengeluaran').select('*').order('created_at', { ascending: false }),
+      supabase.from('distribusi').select('*, periode_distribusi(nama), penerima_zakat(nama)').order('created_at', { ascending: false }),
     ]);
 
     const items: TransaksiItem[] = [
@@ -74,6 +75,22 @@ export default function BendaharaPage() {
         jumlah: r.jumlah,
         keterangan: r.deskripsi,
       })),
+      ...(distribusi.data ?? []).map((r) => {
+        const periodeNama = (r.periode_distribusi as { nama: string } | null)?.nama;
+        const mustahiqNama = (r.penerima_zakat as { nama: string } | null)?.nama;
+        let ket = r.keterangan || '';
+        if (mustahiqNama) {
+          ket = ket ? `${mustahiqNama} - ${ket}` : mustahiqNama;
+        }
+        return {
+          id: `d-${r.id}`,
+          tanggal: r.tanggal,
+          jenis: 'PENGELUARAN' as const,
+          label: periodeNama ? `Distribusi (${periodeNama})` : 'Distribusi Zakat',
+          jumlah: r.jumlah,
+          keterangan: ket || null,
+        };
+      }),
     ].sort((a, b) => b.tanggal.localeCompare(a.tanggal) || a.id.localeCompare(b.id));
 
     setData(items);

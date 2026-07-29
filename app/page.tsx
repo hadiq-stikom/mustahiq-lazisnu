@@ -36,14 +36,21 @@ export default function HalamanUtama() {
   const [pesanSukses, setPesanSukses] = useState('');
 
   // Transparansi
-  const [totalPenerimaan, setTotalPenerimaan] = useState(0);
+  const [saldo, setSaldo] = useState(0);
   const [periodeAktif, setPeriodeAktif] = useState<PeriodeDistribusi | null>(null);
   const [distribusiPeriode, setDistribusiPeriode] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const loadSaldo = async () => {
-      const { data: p } = await supabase.from('penerimaan').select('jumlah');
-      if (p) setTotalPenerimaan(p.reduce((s, r) => s + (r.jumlah || 0), 0));
+      const [penerimaan, distribusi, pengeluaran] = await Promise.all([
+        supabase.from('penerimaan').select('jumlah'),
+        supabase.from('distribusi').select('jumlah'),
+        supabase.from('pengeluaran').select('jumlah'),
+      ]);
+      const totalP = (penerimaan.data ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
+      const totalD = (distribusi.data ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
+      const totalPeng = (pengeluaran.data ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
+      setSaldo(totalP - totalD - totalPeng);
     };
     loadSaldo();
   }, []);
@@ -122,8 +129,8 @@ export default function HalamanUtama() {
       {/* SALDO & TOTAL MUSTAHIQ */}
       <div className="mb-6">
         <div className="bg-white dark:bg-gray-900 border border-emerald-200 dark:border-emerald-900 rounded-xl p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">💰 Saldo</p>
-          <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">{formatRupiah(totalPenerimaan)}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">💰 Saldo Kas</p>
+          <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">{formatRupiah(saldo)}</p>
         </div>
         <div className="mt-2 bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-900 rounded-xl px-4 py-3 shadow-sm">
           <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">📊 Total Mustahiq Terdata: {totalJiwa} Jiwa</p>
