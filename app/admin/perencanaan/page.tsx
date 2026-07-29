@@ -227,16 +227,18 @@ export default function PerencanaanPage() {
         </div>
 
         {jumlahPerJiwa && parseFloat(jumlahPerJiwa) > 0 && totalMustahiqTerpilih > 0 && (
-          <div className="bg-gray-50 rounded-lg p-3 text-xs">
-            <p>Estimasi total: <strong>{formatRupiah(parseFloat(jumlahPerJiwa) * totalMustahiqTerpilih)}</strong></p>
-            <p className="text-gray-500">({totalMustahiqTerpilih} jiwa × {formatRupiah(parseFloat(jumlahPerJiwa))})</p>
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-xs">
+            <p className="text-gray-900 dark:text-gray-100">Estimasi total: <strong>{formatRupiah(parseFloat(jumlahPerJiwa) * totalMustahiqTerpilih)}</strong></p>
+            <p className="text-gray-500 dark:text-gray-400">({totalMustahiqTerpilih} jiwa × {formatRupiah(parseFloat(jumlahPerJiwa))})</p>
           </div>
         )}
 
         {saldoSekarang > 0 && totalMustahiqTerpilih > 0 && (
-          <div className="bg-emerald-50 rounded-lg p-3 text-xs">
-            Dana tersedia: <strong>{formatRupiah(saldoSekarang)}</strong>
-            {estimasiPerJiwa > 0 && <> — estimasi @ {formatRupiah(estimasiPerJiwa)}/jiwa jika dibagi rata</>}
+          <div className="bg-emerald-50 dark:bg-emerald-950/50 rounded-lg p-3 text-xs">
+            <p className="text-emerald-900 dark:text-emerald-100">
+              Dana tersedia: <strong>{formatRupiah(saldoSekarang)}</strong>
+              {estimasiPerJiwa > 0 && <span className="text-emerald-700 dark:text-emerald-300"> — estimasi @ {formatRupiah(estimasiPerJiwa)}/jiwa jika dibagi rata</span>}
+            </p>
           </div>
         )}
       </div>
