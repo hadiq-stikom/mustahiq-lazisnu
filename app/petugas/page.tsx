@@ -321,13 +321,18 @@ export default function DasborPetugas() {
             <div className="space-y-4 animate-fade-in print:block print:columns-2 print:gap-3 print:space-y-3">
               {dataTergrup.map((grup) => (
                 <div key={grup.rt_id} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden print-avoid-break print:mb-3 print:border-gray-300 print:shadow-none">
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-2 border-b border-gray-200 flex justify-between items-center print-header-keep print:py-1.5 print:bg-emerald-50">
-                    <h3 className="font-bold text-xs text-emerald-900 print:text-xs">RT.{grup.no_rt} &mdash; {grup.nama_rt}</h3>
-                    <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] font-bold">{grup.warga.length} Jiwa</span>
-                  </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
+                        {/* RT Header Banner inside thead to strictly prevent page break detachment */}
+                        <tr className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-gray-200 print:bg-emerald-50">
+                          <th colSpan={4} className="px-4 py-2 print:py-1.5 font-bold">
+                            <div className="flex justify-between items-center">
+                              <h3 className="font-bold text-xs text-emerald-900 print:text-xs">RT.{grup.no_rt} &mdash; {grup.nama_rt}</h3>
+                              <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] font-bold">{grup.warga.length} Jiwa</span>
+                            </div>
+                          </th>
+                        </tr>
                         <tr className="bg-gray-50 text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-100 print:bg-gray-100">
                           <th className="p-2.5 print:p-1 w-8 text-center">No</th>
                           <th className="p-2.5 print:p-1">Nama</th>
