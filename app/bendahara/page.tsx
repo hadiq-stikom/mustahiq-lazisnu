@@ -63,9 +63,10 @@ export default function BendaharaPage() {
   const [saldoTersimpan, setSaldoTersimpan] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Filter & Pagination
+  // Filter, Sort & Pagination
   const [filterTahun, setFilterTahun] = useState(new Date().getFullYear().toString());
   const [filterBulan, setFilterBulan] = useState(String(new Date().getMonth() + 1).padStart(2, '0'));
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const [confirmHapusItem, setConfirmHapusItem] = useState<TransaksiItem | null>(null);
 
@@ -200,11 +201,17 @@ export default function BendaharaPage() {
 
   const bulanFilter = `${filterTahun}-${filterBulan}`;
   const dataFiltered = data.filter((d) => d.tanggal.startsWith(bulanFilter));
+  const dataSorted = [...dataFiltered].sort((a, b) =>
+    sortOrder === 'asc'
+      ? a.tanggal.localeCompare(b.tanggal) || a.id.localeCompare(b.id)
+      : b.tanggal.localeCompare(a.tanggal) || b.id.localeCompare(a.id)
+  );
+
   const totalPemasukan = dataFiltered.filter((d) => d.jenis === 'PEMASUKAN').reduce((s, r) => s + r.jumlah, 0);
   const totalPengeluaran = dataFiltered.filter((d) => d.jenis === 'PENGELUARAN').reduce((s, r) => s + r.jumlah, 0);
 
-  const totalPages = Math.ceil(dataFiltered.length / PAGE_SIZE);
-  const paginatedData = dataFiltered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(dataSorted.length / PAGE_SIZE);
+  const paginatedData = dataSorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const tahunList = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
 
@@ -437,12 +444,26 @@ export default function BendaharaPage() {
 
       {/* ── RIWAYAT TRANSAKSI ── */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+        <div className="px-5 py-3.5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-gray-900">📋 Riwayat Transaksi</span>
             <span className="text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-semibold">{dataFiltered.length}</span>
           </div>
-          <p className="text-xs text-gray-500">{formatNamaBulan(filterBulan)} {filterTahun}</p>
+
+          <div className="flex items-center gap-3 no-print">
+            <div className="flex items-center gap-1.5 text-xs text-gray-600 font-medium">
+              <span>Urutan:</span>
+              <select
+                value={sortOrder}
+                onChange={(e) => { setSortOrder(e.target.value as 'asc' | 'desc'); setPage(1); }}
+                className="px-2.5 py-1 border border-gray-300 rounded-xl text-xs font-semibold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition cursor-pointer"
+              >
+                <option value="asc">⬆️ Tgl 1 ➔ 31 (Lama ➔ Baru)</option>
+                <option value="desc">⬇️ Tgl 31 ➔ 1 (Baru ➔ Lama)</option>
+              </select>
+            </div>
+            <p className="text-xs text-gray-500 hidden sm:block">| {formatNamaBulan(filterBulan)} {filterTahun}</p>
+          </div>
         </div>
         {loading ? (
           <div className="p-5 space-y-3">
@@ -508,9 +529,9 @@ export default function BendaharaPage() {
                   ))}
                 </tbody>
 
-                {/* Print View Body (ALL Data Filtered - Urut Kronologis Tgl 1 -> 31) */}
+                {/* Print View Body (ALL Data Filtered in chosen sort order) */}
                 <tbody className="divide-y divide-gray-200 hidden print:table-row-group">
-                  {[...dataFiltered].sort((a, b) => a.tanggal.localeCompare(b.tanggal)).map((item) => (
+                  {dataSorted.map((item) => (
                     <tr key={`print-${item.id}`}>
                       <td className="p-2 text-gray-700 whitespace-nowrap font-medium">{formatTanggalSingkat(item.tanggal)}</td>
                       <td className="p-2">

@@ -46,6 +46,7 @@ export default function AdminTransaksiPage() {
   const [filterTahun, setFilterTahun] = useState(new Date().getFullYear().toString());
   const [filterBulanMulai, setFilterBulanMulai] = useState('01');
   const [filterBulanSampai, setFilterBulanSampai] = useState('12');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const [confirmHapusItem, setConfirmHapusItem] = useState<TransaksiItem | null>(null);
   const [page, setPage] = useState(1);
@@ -120,11 +121,17 @@ export default function AdminTransaksiPage() {
     return bulanItem >= filterDari && bulanItem <= filterSampai;
   });
 
+  const sortedFiltered = [...filtered].sort((a, b) =>
+    sortOrder === 'asc'
+      ? a.tanggal.localeCompare(b.tanggal) || a.id.localeCompare(b.id)
+      : b.tanggal.localeCompare(a.tanggal) || b.id.localeCompare(a.id)
+  );
+
   const totalPemasukan = filtered.filter((d) => d.jenis === 'PEMASUKAN').reduce((s, r) => s + r.jumlah, 0);
   const totalPengeluaran = filtered.filter((d) => d.jenis === 'PENGELUARAN').reduce((s, r) => s + r.jumlah, 0);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginatedItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(sortedFiltered.length / PAGE_SIZE);
+  const paginatedItems = sortedFiltered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleEksekusiHapus = async () => {
     if (!confirmHapusItem) return;
@@ -219,9 +226,23 @@ export default function AdminTransaksiPage() {
 
       {/* TABEL */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-          <span className="text-sm font-bold text-gray-900">Riwayat Mutasi Transaksi</span>
-          <span className="text-xs text-gray-500 font-medium">{filtered.length} transaksi</span>
+        <div className="px-5 py-3.5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-gray-900">Riwayat Mutasi Transaksi</span>
+            <span className="text-xs text-gray-500 font-medium">({filtered.length} transaksi)</span>
+          </div>
+
+          <div className="flex items-center gap-2 no-print">
+            <span className="text-xs text-gray-600 font-medium">Urutan:</span>
+            <select
+              value={sortOrder}
+              onChange={(e) => { setSortOrder(e.target.value as 'asc' | 'desc'); setPage(1); }}
+              className="px-2.5 py-1 border border-gray-300 rounded-xl text-xs font-semibold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition cursor-pointer"
+            >
+              <option value="asc">⬆️ Tgl 1 ➔ 31 (Lama ➔ Baru)</option>
+              <option value="desc">⬇️ Tgl 31 ➔ 1 (Baru ➔ Lama)</option>
+            </select>
+          </div>
         </div>
         {loading ? (
           <div className="p-6 text-center text-xs text-gray-400">Memuat transaksi...</div>
@@ -268,9 +289,9 @@ export default function AdminTransaksiPage() {
                   ))}
                 </tbody>
 
-                {/* Print View Body (ALL Items Filtered - Urut Kronologis Tgl 1 -> 31) */}
+                {/* Print View Body (ALL Items Filtered in chosen sort order) */}
                 <tbody className="divide-y divide-gray-200 hidden print:table-row-group">
-                  {[...filtered].sort((a, b) => a.tanggal.localeCompare(b.tanggal)).map((item) => (
+                  {sortedFiltered.map((item) => (
                     <tr key={`print-${item.id}`}>
                       <td className="p-2 text-gray-700 font-medium whitespace-nowrap">{formatTanggalSingkat(item.tanggal)}</td>
                       <td className="p-2">
