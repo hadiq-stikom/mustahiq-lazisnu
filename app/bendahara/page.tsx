@@ -7,6 +7,7 @@ import { tambahTransaksi, simpanSaldoBulanBendahara, hapusTransaksiBendahara } f
 import { formatRupiah, formatTanggalSingkat, formatNamaBulan } from '@/lib/utils';
 import ConfirmModal from '@/components/ConfirmModal';
 import Pagination from '@/components/Pagination';
+import PrintHeader from '@/components/PrintHeader';
 
 interface TransaksiItem {
   id: string;
@@ -214,23 +215,40 @@ export default function BendaharaPage() {
 
   return (
     <div className="space-y-5 p-4 sm:p-6 max-w-5xl mx-auto">
+      {/* KOP SURAT PRINT */}
+      <PrintHeader
+        title="Laporan Keuangan Bendahara"
+        subtitle={`Periode: ${formatNamaBulan(filterBulan)} ${filterTahun}`}
+      />
+
       {/* ── HEADER ── */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center no-print">
         <div>
           <h1 className="text-xl font-extrabold text-gray-900">💼 Bendahara</h1>
           <p className="text-xs text-gray-500 mt-0.5">Pencatatan Keuangan LAZISNU Badean</p>
         </div>
-        <button onClick={handleLogout}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition active:scale-95">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-          </svg>
-          Logout
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition active:scale-95"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.562 0-1.056-.419-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m0 0a48.1 48.1 0 0110.56 0m-10.56 0V3.375c0-.621.504-1.125 1.125-1.125h8.25c.621 0 1.125.504 1.125 1.125v3.656" />
+            </svg>
+            Cetak PDF
+          </button>
+          <button onClick={handleLogout}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition active:scale-95">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+            </svg>
+            Logout
+          </button>
+        </div>
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-sm flex items-center gap-2">
+        <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-sm flex items-center gap-2 no-print">
           <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
           </svg>
@@ -239,7 +257,7 @@ export default function BendaharaPage() {
       )}
 
       {/* ── FORM TRANSAKSI ── */}
-      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
+      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4 no-print">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-gray-900">📝 Catat Transaksi Baru</h2>
           <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
@@ -320,7 +338,7 @@ export default function BendaharaPage() {
       </form>
 
       {/* ── FILTER BULAN ── */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+      <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm no-print">
         <p className="text-xs font-bold text-gray-700 mb-3">🗓️ Filter Periode</p>
         <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
           <div>
@@ -367,51 +385,53 @@ export default function BendaharaPage() {
           <p className={`text-base font-extrabold mt-1 ${saldoSaatIni < 0 ? 'text-red-700' : 'text-white'}`}>
             {formatRupiah(saldoSaatIni)}
           </p>
-          {(() => {
-            if (!saldoSudahDisimpan) {
+          <div className="no-print">
+            {(() => {
+              if (!saldoSudahDisimpan) {
+                return (
+                  <button onClick={async () => {
+                    setIsSaving(true);
+                    try {
+                      await simpanSaldoBulanBendahara(`${filterTahun}-${filterBulan}`);
+                      setSaldoSudahDisimpan(true);
+                      setSaldoTersimpan(saldoSaatIni);
+                    } catch (e) {
+                      alert(e instanceof Error ? e.message : 'Gagal menyimpan saldo');
+                    } finally {
+                      setIsSaving(false);
+                    }
+                  }} disabled={isSaving}
+                    className="mt-2 w-full py-1.5 px-3 bg-white/20 hover:bg-white/30 text-white rounded-lg text-[10px] font-semibold disabled:opacity-50 transition flex items-center justify-center gap-1.5">
+                    {isSaving ? <><Spinner size={3} /> Menyimpan...</> : `💾 Simpan ${formatNamaBulan(filterBulan)}`}
+                  </button>
+                );
+              }
+              if (isBulanBerjalan && saldoBerbeda) {
+                return (
+                  <button onClick={async () => {
+                    setIsSaving(true);
+                    try {
+                      await simpanSaldoBulanBendahara(`${filterTahun}-${filterBulan}`);
+                      setSaldoTersimpan(saldoSaatIni);
+                    } catch (e) {
+                      alert(e instanceof Error ? e.message : 'Gagal menyimpan saldo');
+                    } finally {
+                      setIsSaving(false);
+                    }
+                  }} disabled={isSaving}
+                    className="mt-2 w-full py-1.5 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-semibold disabled:opacity-50 transition flex items-center justify-center gap-1.5">
+                    {isSaving ? <><Spinner size={3} /> Menyimpan...</> : `🔄 Update ${formatNamaBulan(filterBulan)}`}
+                  </button>
+                );
+              }
               return (
-                <button onClick={async () => {
-                  setIsSaving(true);
-                  try {
-                    await simpanSaldoBulanBendahara(`${filterTahun}-${filterBulan}`);
-                    setSaldoSudahDisimpan(true);
-                    setSaldoTersimpan(saldoSaatIni);
-                  } catch (e) {
-                    alert(e instanceof Error ? e.message : 'Gagal menyimpan saldo');
-                  } finally {
-                    setIsSaving(false);
-                  }
-                }} disabled={isSaving}
-                  className="mt-2 w-full py-1.5 px-3 bg-white/20 hover:bg-white/30 text-white rounded-lg text-[10px] font-semibold disabled:opacity-50 transition flex items-center justify-center gap-1.5">
-                  {isSaving ? <><Spinner size={3} /> Menyimpan...</> : `💾 Simpan ${formatNamaBulan(filterBulan)}`}
-                </button>
+                <p className={`mt-2 text-[10px] font-semibold flex items-center gap-1 ${saldoSaatIni < 0 ? 'text-red-600' : 'text-emerald-100'}`}>
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" /></svg>
+                  Tersimpan
+                </p>
               );
-            }
-            if (isBulanBerjalan && saldoBerbeda) {
-              return (
-                <button onClick={async () => {
-                  setIsSaving(true);
-                  try {
-                    await simpanSaldoBulanBendahara(`${filterTahun}-${filterBulan}`);
-                    setSaldoTersimpan(saldoSaatIni);
-                  } catch (e) {
-                    alert(e instanceof Error ? e.message : 'Gagal menyimpan saldo');
-                  } finally {
-                    setIsSaving(false);
-                  }
-                }} disabled={isSaving}
-                  className="mt-2 w-full py-1.5 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-semibold disabled:opacity-50 transition flex items-center justify-center gap-1.5">
-                  {isSaving ? <><Spinner size={3} /> Menyimpan...</> : `🔄 Update ${formatNamaBulan(filterBulan)}`}
-                </button>
-              );
-            }
-            return (
-              <p className={`mt-2 text-[10px] font-semibold flex items-center gap-1 ${saldoSaatIni < 0 ? 'text-red-600' : 'text-emerald-100'}`}>
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" /></svg>
-                Tersimpan
-              </p>
-            );
-          })()}
+            })()}
+          </div>
         </div>
       </div>
 
@@ -450,7 +470,7 @@ export default function BendaharaPage() {
                     <th className="p-3">Jenis</th>
                     <th className="p-3">Keterangan</th>
                     <th className="p-3 text-right">Jumlah</th>
-                    <th className="p-3 text-center">Aksi</th>
+                    <th className="p-3 text-center no-print">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -471,7 +491,7 @@ export default function BendaharaPage() {
                       <td className={`p-3 text-right font-bold ${item.jenis === 'PEMASUKAN' ? 'text-emerald-600' : 'text-red-600'}`}>
                         {item.jenis === 'PEMASUKAN' ? '+' : '−'}{formatRupiah(item.jumlah)}
                       </td>
-                      <td className="p-3 text-center">
+                      <td className="p-3 text-center no-print">
                         {item.tabel !== 'distribusi' ? (
                           <button
                             onClick={() => setConfirmHapusItem(item)}
@@ -512,6 +532,18 @@ export default function BendaharaPage() {
         onConfirm={handleEksekusiHapus}
         onCancel={() => setConfirmHapusItem(null)}
       />
+
+      {/* TANDA TANGAN CETAK */}
+      <div className="hidden print:flex justify-between items-end pt-12 text-xs">
+        <div className="text-center w-48">
+          <p className="mb-16">Mengetahui,<br /><strong>Ketua LAZISNU Badean</strong></p>
+          <p className="border-b border-gray-400 pb-1 font-bold">( ........................................ )</p>
+        </div>
+        <div className="text-center w-48">
+          <p className="mb-16">Badean, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br /><strong>Bendahara</strong></p>
+          <p className="border-b border-gray-400 pb-1 font-bold">( ........................................ )</p>
+        </div>
+      </div>
     </div>
   );
 }

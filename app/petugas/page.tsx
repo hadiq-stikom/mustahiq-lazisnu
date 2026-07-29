@@ -6,6 +6,7 @@ import { supabase } from '@/utils/supabase';
 import { centangDistribusi } from '@/lib/actions/petugas';
 import type { Mustahiq, RTGroup, PengajuanUpdate, PeriodeDistribusi } from '@/lib/types';
 import ConfirmModal from '@/components/ConfirmModal';
+import PrintHeader from '@/components/PrintHeader';
 
 type Tab = 'mustahiq' | 'distribusi';
 
@@ -209,23 +210,40 @@ export default function DasborPetugas() {
 
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-8 min-h-screen bg-gray-50 text-gray-800">
+      {/* KOP SURAT PRINT */}
+      <PrintHeader
+        title="Daftar Penerima Zakat Mal (Mustahiq)"
+        subtitle="Sistem Informasi Pendataan Lapangan — Desa Badean"
+      />
+
       {/* Header */}
-      <div className="flex justify-between items-center pb-5 mb-6 border-b border-gray-200">
+      <div className="flex justify-between items-center pb-5 mb-6 border-b border-gray-200 no-print">
         <div>
           <h1 className="text-xl font-extrabold text-gray-900">🧑‍💼 Halaman Petugas</h1>
           <p className="text-xs text-gray-500 mt-0.5">LAZISNU Desa Badean</p>
         </div>
-        <button onClick={handleLogout}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition active:scale-95">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-          </svg>
-          Logout
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition active:scale-95"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.562 0-1.056-.419-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m0 0a48.1 48.1 0 0110.56 0m-10.56 0V3.375c0-.621.504-1.125 1.125-1.125h8.25c.621 0 1.125.504 1.125 1.125v3.656" />
+            </svg>
+            Cetak PDF
+          </button>
+          <button onClick={handleLogout}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition active:scale-95">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+            </svg>
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-2xl p-1.5 shadow-sm">
+      <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-2xl p-1.5 shadow-sm no-print">
         {([['mustahiq', '👥 Data Mustahiq'], ['distribusi', '🎯 Distribusi']] as [Tab, string][]).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)}
             className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition ${
@@ -237,7 +255,7 @@ export default function DasborPetugas() {
       {/* === TAB MUSTAHIQ === */}
       {tab === 'mustahiq' && (
         <div className="space-y-6">
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm no-print">
             <h2 className="text-xs font-bold text-gray-900 mb-3">➕ Daftarkan Warga Baru</h2>
             <form onSubmit={handleTambah} className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end">
               <select required value={formRT} onChange={(e) => setFormRT(e.target.value)}
@@ -273,7 +291,7 @@ export default function DasborPetugas() {
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3 items-center bg-white p-4 border border-gray-200 rounded-xl shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-3 items-center bg-white p-4 border border-gray-200 rounded-xl shadow-sm no-print">
             <input type="text" placeholder="🔍 Cari mustahiq..." value={kataKunci} onChange={(e) => setKataKunci(e.target.value)}
               className="w-full sm:max-w-xs px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-900" />
             <select value={rtTerpilih} onChange={(e) => setRtTerpilih(e.target.value)}
@@ -300,9 +318,9 @@ export default function DasborPetugas() {
               <p className="text-sm text-gray-400">Tidak ada data mustahiq.</p>
             </div>
           ) : (
-            <div className="space-y-4 animate-fade-in">
+            <div className="space-y-4 animate-fade-in print:grid print:grid-cols-2 print:gap-4 print:space-y-0 print:items-start">
               {dataTergrup.map((grup) => (
-                <div key={grup.rt_id} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                <div key={grup.rt_id} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden break-inside-avoid">
                   <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-3 border-b border-gray-200 flex justify-between items-center">
                     <h3 className="font-bold text-sm text-emerald-900">RT.{grup.no_rt} &mdash; {grup.nama_rt}</h3>
                     <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-[10px] font-bold">{grup.warga.length} Jiwa</span>
@@ -314,7 +332,7 @@ export default function DasborPetugas() {
                           <th className="p-3 w-10 text-center">No</th>
                           <th className="p-3">Nama</th>
                           <th className="p-3">Keterangan</th>
-                          <th className="p-3 text-center">Aksi</th>
+                          <th className="p-3 text-center no-print">Aksi</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -333,7 +351,7 @@ export default function DasborPetugas() {
                                   className="px-2 py-1.5 border border-gray-300 rounded-lg w-full text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
                               ) : <span className="text-gray-500 italic">{w.keterangan || '—'}</span>}
                             </td>
-                            <td className="p-3 text-center">
+                            <td className="p-3 text-center no-print">
                               {wargaDiedit === w.id ? (
                                 <div className="flex justify-center gap-1.5">
                                   <button onClick={() => handleSimpanEdit(w.id)}
@@ -497,6 +515,18 @@ export default function DasborPetugas() {
         onConfirm={handleHapusKonfirmasi}
         onCancel={() => setConfirmHapusId(null)}
       />
+
+      {/* TANDA TANGAN CETAK */}
+      <div className="hidden print:flex justify-between items-end pt-12 text-xs">
+        <div className="text-center w-48">
+          <p className="mb-16">Mengetahui,<br /><strong>Ketua LAZISNU Badean</strong></p>
+          <p className="border-b border-gray-400 pb-1 font-bold">( ........................................ )</p>
+        </div>
+        <div className="text-center w-48">
+          <p className="mb-16">Badean, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br /><strong>Petugas Pendataan</strong></p>
+          <p className="border-b border-gray-400 pb-1 font-bold">( ........................................ )</p>
+        </div>
+      </div>
     </div>
   );
 }
