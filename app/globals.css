@@ -126,8 +126,21 @@ body {
   }
 
   tr {
-    page-break-inside: avoid;
-    break-inside: avoid;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .print-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    break-inside: avoid-page !important;
+    break-inside: avoid-column !important;
+  }
+
+  .print-header-keep {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    break-after: avoid-page !important;
   }
 
   @page {
