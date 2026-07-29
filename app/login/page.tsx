@@ -54,10 +54,8 @@ export default function HalamanLogin() {
 
                 <div className="relative z-10 text-center text-white">
                     {/* Logo icon */}
-                    <div className="w-24 h-24 mx-auto mb-6 bg-white/10 rounded-3xl flex items-center justify-center shadow-xl backdrop-blur-sm border border-white/20">
-                        <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5a17.92 17.92 0 01-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-                        </svg>
+                    <div className="w-28 h-28 mx-auto mb-6 bg-white rounded-3xl p-3 flex items-center justify-center shadow-xl border border-white/20">
+                        <img src="/logo2.png" alt="Logo LAZISNU" className="w-full h-full object-contain" />
                     </div>
 
                     <h1 className="text-3xl font-extrabold tracking-tight mb-2">LAZISNU</h1>
@@ -84,12 +82,10 @@ export default function HalamanLogin() {
 
             {/* Right panel — form */}
             <div className="flex-1 flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-950">
-                {/* Mobile brand */}
-                <div className="flex items-center gap-3 mb-8 lg:hidden">
-                    <div className="w-10 h-10 bg-emerald-700 rounded-xl flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3" />
-                        </svg>
+                {/* Mobile brand header */}
+                <div className="lg:hidden flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 bg-white rounded-xl p-1 flex items-center justify-center border border-gray-200 shadow-sm shrink-0">
+                        <img src="/logo2.png" alt="Logo LAZISNU" className="w-full h-full object-contain" />
                     </div>
                     <div>
                         <p className="text-sm font-bold text-gray-900 dark:text-white">LAZISNU Badean</p>

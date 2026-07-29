@@ -4,10 +4,8 @@ export default function PrintHeader({ title, subtitle }: { title: string; subtit
   return (
     <div className="hidden print:block mb-6 border-b-2 border-emerald-800 pb-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-emerald-800 text-white rounded-xl flex items-center justify-center font-bold text-xl">
-            L
-          </div>
+        <div className="flex items-center gap-4">
+          <img src="/logo2.png" alt="Logo LAZISNU" className="h-16 w-auto object-contain shrink-0" />
           <div>
             <h1 className="text-xl font-black text-emerald-950 tracking-tight">LAZISNU DESA BADEAN</h1>
             <p className="text-xs text-gray-600 font-medium">Lembaga Amil Zakat, Infak, dan Sedekah Nahdlatul Ulama</p>

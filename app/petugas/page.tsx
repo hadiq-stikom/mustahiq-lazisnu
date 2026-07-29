@@ -218,9 +218,14 @@ export default function DasborPetugas() {
 
       {/* Header */}
       <div className="flex justify-between items-center pb-5 mb-6 border-b border-gray-200 no-print">
-        <div>
-          <h1 className="text-xl font-extrabold text-gray-900">🧑‍💼 Halaman Petugas</h1>
-          <p className="text-xs text-gray-500 mt-0.5">LAZISNU Desa Badean</p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-white border border-gray-200 rounded-xl p-1 shadow-sm flex items-center justify-center shrink-0">
+            <img src="/logo2.png" alt="Logo LAZISNU" className="w-full h-full object-contain" />
+          </div>
+          <div>
+            <h1 className="text-xl font-extrabold text-gray-900">🧑‍💼 Halaman Petugas</h1>
+            <p className="text-xs text-gray-500 mt-0.5">LAZISNU Desa Badean</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button

@@ -175,10 +175,8 @@ export default function HalamanUtama() {
         <div className="absolute bottom-[-20px] left-[-20px] w-32 h-32 rounded-full bg-emerald-600/30" />
 
         <div className="relative z-10 text-center">
-          <div className="w-14 h-14 mx-auto mb-4 bg-white/15 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/20 shadow-lg">
-            <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3" />
-            </svg>
+          <div className="w-20 h-20 mx-auto mb-4 bg-white rounded-2xl p-2 flex items-center justify-center shadow-xl border border-white/20">
+            <img src="/logo2.png" alt="Logo LAZISNU" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">LAZISNU DESA BADEAN</h1>
           <p className="text-emerald-200 text-sm mt-1.5 font-medium">Transparansi Pengelolaan Zakat Mal</p>

@@ -48,10 +48,8 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
       >
         {/* Brand */}
         <div className="flex items-center gap-3 p-5 border-b border-emerald-800/60">
-          <div className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center border border-white/15 shrink-0">
-            <svg className="w-5 h-5 text-emerald-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3" />
-            </svg>
+          <div className="w-10 h-10 bg-white rounded-xl p-1 flex items-center justify-center border border-white/20 shrink-0 shadow-sm">
+            <img src="/logo2.png" alt="Logo LAZISNU" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0">
             <h2 className="font-bold text-sm text-white truncate">LAZISNU Badean</h2>
