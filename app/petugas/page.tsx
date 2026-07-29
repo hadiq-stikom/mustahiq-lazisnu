@@ -206,20 +206,27 @@ export default function DasborPetugas() {
 
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-8 min-h-screen bg-gray-50 text-gray-800">
-      <div className="flex justify-between items-center border-b border-gray-200 pb-4 mb-6">
+      {/* Header */}
+      <div className="flex justify-between items-center pb-5 mb-6 border-b border-gray-200">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Halaman Petugas</h1>
-          <p className="text-xs text-gray-500">LAZISNU Desa Badean</p>
+          <h1 className="text-xl font-extrabold text-gray-900">🧑‍💼 Halaman Petugas</h1>
+          <p className="text-xs text-gray-500 mt-0.5">LAZISNU Desa Badean</p>
         </div>
         <button onClick={handleLogout}
-          className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700">Logout</button>
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition active:scale-95">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+          </svg>
+          Logout
+        </button>
       </div>
 
-      <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-2xl p-1.5 shadow-sm">
         {([['mustahiq', '👥 Data Mustahiq'], ['distribusi', '🎯 Distribusi']] as [Tab, string][]).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)}
-            className={`flex-1 py-2 rounded-lg text-xs font-bold transition ${
-              tab === key ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-800'
+            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition ${
+              tab === key ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-800'
             }`}>{label}</button>
         ))}
       </div>
@@ -274,56 +281,70 @@ export default function DasborPetugas() {
           </div>
 
           {loading ? (
-            <div className="text-center py-8 text-xs text-gray-400">Memuat...</div>
+            <div className="space-y-3">
+              {[1,2,3].map(i => (
+                <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4">
+                  <div className="skeleton h-4 w-28 mb-3" />
+                  <div className="space-y-2">
+                    {[1,2,3].map(j => <div key={j} className="skeleton h-3 w-full" />)}
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : dataTergrup.length === 0 ? (
-            <div className="text-center py-8 bg-white border border-gray-200 rounded-xl text-xs text-gray-400">Tidak ada data.</div>
+            <div className="text-center py-12 bg-white border border-gray-200 rounded-2xl">
+              <p className="text-3xl mb-2">🔍</p>
+              <p className="text-sm text-gray-400">Tidak ada data mustahiq.</p>
+            </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 animate-fade-in">
               {dataTergrup.map((grup) => (
-                <div key={grup.rt_id} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                  <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="font-bold text-xs text-gray-800">RT.{grup.no_rt} &mdash; {grup.nama_rt}</h3>
-                    <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-[10px] font-semibold">{grup.warga.length} Jiwa</span>
+                <div key={grup.rt_id} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-3 border-b border-gray-200 flex justify-between items-center">
+                    <h3 className="font-bold text-sm text-emerald-900">RT.{grup.no_rt} &mdash; {grup.nama_rt}</h3>
+                    <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-[10px] font-bold">{grup.warga.length} Jiwa</span>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
-                        <tr className="bg-gray-50/40 text-gray-400 uppercase text-[10px] tracking-wider">
-                          <th className="p-2.5 w-10 text-center">No</th><th className="p-2.5">Nama</th>
-                          <th className="p-2.5">Keterangan</th><th className="p-2.5 text-center">Aksi</th>
+                        <tr className="bg-gray-50 text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-100">
+                          <th className="p-3 w-10 text-center">No</th>
+                          <th className="p-3">Nama</th>
+                          <th className="p-3">Keterangan</th>
+                          <th className="p-3 text-center">Aksi</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody className="divide-y divide-gray-50">
                         {grup.warga.map((w, i) => (
-                          <tr key={w.id} className="hover:bg-gray-50/50">
-                            <td className="p-2.5 text-center text-gray-400">{i + 1}</td>
-                            <td className="p-2.5">
+                          <tr key={w.id} className="hover:bg-gray-50 transition">
+                            <td className="p-3 text-center text-gray-400 font-medium">{i + 1}</td>
+                            <td className="p-3">
                               {wargaDiedit === w.id ? (
                                 <input type="text" value={editNama} onChange={(e) => setEditNama(e.target.value)}
-                                  className="px-2 py-1 border border-gray-300 rounded w-full text-xs text-gray-900" />
+                                  className="px-2 py-1.5 border border-gray-300 rounded-lg w-full text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
                               ) : <span className="font-semibold text-gray-900">{w.nama}</span>}
                             </td>
-                            <td className="p-2.5">
+                            <td className="p-3">
                               {wargaDiedit === w.id ? (
                                 <input type="text" value={editKeterangan} onChange={(e) => setEditKeterangan(e.target.value)}
-                                  className="px-2 py-1 border border-gray-300 rounded w-full text-xs text-gray-900" />
-                              ) : <span className="text-gray-500">{w.keterangan || '-'}</span>}
+                                  className="px-2 py-1.5 border border-gray-300 rounded-lg w-full text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                              ) : <span className="text-gray-500 italic">{w.keterangan || '—'}</span>}
                             </td>
-                            <td className="p-2.5 text-center">
+                            <td className="p-3 text-center">
                               {wargaDiedit === w.id ? (
-                                <div className="flex justify-center gap-1">
+                                <div className="flex justify-center gap-1.5">
                                   <button onClick={() => handleSimpanEdit(w.id)}
-                                    className="px-2 py-0.5 bg-blue-600 text-white rounded text-[10px] font-bold">Simpan</button>
+                                    className="px-3 py-1 bg-blue-600 text-white rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">Simpan</button>
                                   <button onClick={() => setWargaDiedit(null)}
-                                    className="px-2 py-0.5 bg-gray-300 text-gray-700 rounded text-[10px] font-medium">Batal</button>
+                                    className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-[10px] font-medium hover:bg-gray-300 transition">Batal</button>
                                 </div>
                               ) : (
-                                <div className="flex justify-center gap-1.5">
+                                <div className="flex justify-center gap-2">
                                   <button onClick={() => { setWargaDiedit(w.id); setEditNama(w.nama); setEditKeterangan(w.keterangan || ''); }}
-                                    className="text-emerald-700 hover:text-emerald-900 font-semibold">Ubah</button>
+                                    className="text-emerald-700 hover:text-emerald-900 font-bold text-[10px] transition">Edit</button>
                                   <span className="text-gray-200">|</span>
                                   <button onClick={() => handleHapus(w.id)}
-                                    className="text-red-600 hover:text-red-800 font-semibold">Hapus</button>
+                                    className="text-red-500 hover:text-red-700 font-bold text-[10px] transition">Hapus</button>
                                 </div>
                               )}
                             </td>
@@ -341,29 +362,51 @@ export default function DasborPetugas() {
 
       {/* === TAB DISTRIBUSI === */}
       {tab === 'distribusi' && (
-        <div className="space-y-6">
+        <div className="space-y-4 animate-fade-in">
           {!periodeAktif ? (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
-              <p className="text-xs text-amber-700 font-semibold">⏸️ Belum ada periode distribusi aktif.</p>
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center">
+              <p className="text-4xl mb-3">⏸️</p>
+              <p className="text-sm text-amber-700 font-bold">Belum ada periode distribusi aktif.</p>
               <p className="text-xs text-amber-500 mt-1">Tunggu admin membuka periode baru.</p>
             </div>
           ) : (
             <>
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex justify-between items-center">
-                <div>
-                  <p className="text-xs text-emerald-800 font-semibold">✅ {periodeAktif.nama}</p>
-                  <p className="text-[11px] text-emerald-600 mt-0.5">
-                    @ {periodeAktif.jumlah_per_jiwa ? `Rp ${Number(periodeAktif.jumlah_per_jiwa).toLocaleString('id-ID')} per jiwa` : 'Nominal belum ditentukan'}
-                    {periodeAktif.bentuk !== 'TUNAI' ? ` (${periodeAktif.bentuk})` : ''}
-                  </p>
+              {/* Periode info + progress */}
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-5">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="text-sm font-extrabold text-emerald-900">🎯 {periodeAktif.nama}</p>
+                    <p className="text-xs text-emerald-600 mt-0.5">
+                      {periodeAktif.jumlah_per_jiwa
+                        ? `Rp ${Number(periodeAktif.jumlah_per_jiwa).toLocaleString('id-ID')} per jiwa`
+                        : 'Nominal belum ditentukan'}
+                      {periodeAktif.bentuk !== 'TUNAI' ? ` · ${periodeAktif.bentuk}` : ''}
+                    </p>
+                  </div>
+                  <span className="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold">
+                    {distSudah.size} / {distGrup.reduce((s, g) => s + g.warga.length, 0)} Jiwa
+                  </span>
                 </div>
-                <span className="text-xs text-emerald-700">{distSudah.size} / {distGrup.reduce((s, g) => s + g.warga.length, 0)} sudah</span>
+                {/* Global progress bar */}
+                {distGrup.length > 0 && (() => {
+                  const totalGlobal = distGrup.reduce((s, g) => s + g.warga.length, 0);
+                  const pct = totalGlobal > 0 ? Math.round((distSudah.size / totalGlobal) * 100) : 0;
+                  return (
+                    <div>
+                      <div className="h-2.5 bg-emerald-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                      </div>
+                      <p className="text-[10px] text-emerald-600 mt-1.5 font-semibold">{pct}% sudah menerima distribusi</p>
+                    </div>
+                  );
+                })()}
               </div>
 
+              {/* RT filter */}
               {distDaftarRT.length > 0 && (
-                <div className="flex gap-2">
+                <div>
                   <select value={distFilterRT} onChange={(e) => setDistFilterRT(e.target.value)}
-                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900">
+                    className="px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
                     <option value="semua">📍 Semua RT</option>
                     {distDaftarRT.map((rt) => (
                       <option key={rt.id} value={rt.id}>RT.{rt.no_rt} — {rt.nama_rt}</option>
@@ -377,53 +420,54 @@ export default function DasborPetugas() {
                 .map((grup) => {
                 const totalRT = grup.warga.length;
                 const terdistribusi = grup.warga.filter((w) => distSudah.has(w.id)).length;
+                const pctRT = totalRT > 0 ? Math.round((terdistribusi / totalRT) * 100) : 0;
                 return (
-                  <div key={grup.rt_id} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                    <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex justify-between items-center">
-                      <h3 className="font-bold text-xs text-gray-800">RT.{grup.no_rt} &mdash; {grup.nama_rt}</h3>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">{terdistribusi}/{totalRT}</span>
-                        <div className="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-emerald-500 rounded-full transition-all"
-                            style={{ width: `${totalRT > 0 ? (terdistribusi / totalRT) * 100 : 0}%` }} />
-                        </div>
+                  <div key={grup.rt_id} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-3.5 border-b border-gray-200">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-bold text-sm text-emerald-900">RT.{grup.no_rt} — {grup.nama_rt}</h3>
+                        <span className="text-xs font-semibold text-gray-600">{terdistribusi}/{totalRT} ({pctRT}%)</span>
+                      </div>
+                      <div className="h-1.5 bg-emerald-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full transition-all duration-700"
+                          style={{ width: `${pctRT}%` }} />
                       </div>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead>
-                          <tr className="bg-gray-50/40 text-gray-400 uppercase text-[10px] tracking-wider">
-                            <th className="p-2.5 w-10 text-center">No</th>
-                            <th className="p-2.5">Nama</th>
-                            <th className="p-2.5">Status</th>
-                            <th className="p-2.5 text-center">Aksi</th>
+                          <tr className="bg-gray-50 text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-100">
+                            <th className="p-3 w-10 text-center">No</th>
+                            <th className="p-3">Nama</th>
+                            <th className="p-3">Status</th>
+                            <th className="p-3 text-center">Aksi</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-gray-50">
                           {grup.warga.map((w, i) => {
                             const sudah = distSudah.has(w.id);
                             return (
-                              <tr key={w.id} className={`${sudah ? 'bg-green-50/40' : ''} hover:bg-gray-50/30`}>
-                                <td className="p-2.5 text-center text-gray-400">{i + 1}</td>
-                                <td className="p-2.5 font-semibold text-gray-900">{w.nama}</td>
-                                <td className="p-2.5">
+                              <tr key={w.id} className={`${sudah ? 'bg-emerald-50/40' : ''} hover:bg-gray-50 transition`}>
+                                <td className="p-3 text-center text-gray-400 font-medium">{i + 1}</td>
+                                <td className="p-3 font-semibold text-gray-900">{w.nama}</td>
+                                <td className="p-3">
                                   {sudah ? (
-                                    <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-semibold">✅ Sudah</span>
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold">✓ Sudah</span>
                                   ) : (
-                                    <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-[10px] font-semibold">⏳ Belum</span>
+                                    <span className="inline-flex px-2.5 py-0.5 bg-gray-100 text-gray-500 rounded-full text-[10px] font-semibold">Belum</span>
                                   )}
                                 </td>
-                                <td className="p-2.5 text-center">
+                                <td className="p-3 text-center">
                                   <button onClick={() => handleCentang(w.id)}
                                     disabled={loadingCentang.has(w.id)}
-                                    className={`px-3 py-1 rounded text-[10px] font-bold transition ${
+                                    className={`px-3.5 py-1.5 rounded-lg text-[10px] font-bold transition active:scale-95 ${
                                       loadingCentang.has(w.id)
-                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                         : sudah
                                           ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                                          : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                          : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
                                     }`}>
-                                    {loadingCentang.has(w.id) ? '⏳ ...' : (sudah ? 'Batal' : 'Centang')}
+                                    {loadingCentang.has(w.id) ? '...' : (sudah ? '✕ Batal' : '✓ Centang')}
                                   </button>
                                 </td>
                               </tr>

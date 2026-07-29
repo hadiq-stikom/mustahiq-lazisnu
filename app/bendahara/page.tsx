@@ -24,6 +24,15 @@ const bulanOptions = [
   { value: '11', label: 'November' }, { value: '12', label: 'Desember' },
 ];
 
+function Spinner({ size = 4 }: { size?: number }) {
+  return (
+    <svg className={`w-${size} h-${size} animate-spin-slow`} fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
+
 export default function BendaharaPage() {
   const router = useRouter();
   const [data, setData] = useState<TransaksiItem[]>([]);
@@ -39,6 +48,7 @@ export default function BendaharaPage() {
   const [formKet, setFormKet] = useState('');
   const [formJumlah, setFormJumlah] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // Saldo
   const [saldoAwal, setSaldoAwal] = useState(0);
@@ -125,6 +135,7 @@ export default function BendaharaPage() {
     e.preventDefault();
     setError('');
     if (!formJumlah || parseFloat(formJumlah) <= 0) return alert('Jumlah harus diisi.');
+    setSubmitting(true);
 
     const fd = new FormData();
     fd.set('jenis', jenis);
@@ -146,6 +157,8 @@ export default function BendaharaPage() {
       loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -168,61 +181,75 @@ export default function BendaharaPage() {
   const saldoBerbeda = saldoTersimpan !== saldoSaatIni;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 p-4 sm:p-6 max-w-5xl mx-auto">
+      {/* ── HEADER ── */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold text-gray-900">Bendahara</h1>
-          <p className="text-xs text-gray-500">Pencatatan Transaksi LAZISNU Badean</p>
+          <h1 className="text-xl font-extrabold text-gray-900">💼 Bendahara</h1>
+          <p className="text-xs text-gray-500 mt-0.5">Pencatatan Keuangan LAZISNU Badean</p>
         </div>
         <button onClick={handleLogout}
-          className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700">Logout</button>
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition active:scale-95">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+          </svg>
+          Logout
+        </button>
       </div>
 
-      {error && <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs">{error}</div>}
+      {error && (
+        <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-sm flex items-center gap-2">
+          <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+          </svg>
+          {error}
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-3">
-        <h2 className="text-sm font-bold text-gray-900">📝 Catat Transaksi Baru</h2>
-
-        <div className="flex gap-2 p-1 bg-gray-100 rounded-xl w-fit">
-          <button type="button" onClick={() => setJenis('PEMASUKAN')}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${jenis === 'PEMASUKAN' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500'}`}>
-            💰 Pemasukan
-          </button>
-          <button type="button" onClick={() => setJenis('PENGELUARAN')}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${jenis === 'PENGELUARAN' ? 'bg-white text-red-700 shadow-sm' : 'text-gray-500'}`}>
-            🏷️ Pengeluaran
-          </button>
+      {/* ── FORM TRANSAKSI ── */}
+      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold text-gray-900">📝 Catat Transaksi Baru</h2>
+          <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
+            <button type="button" onClick={() => setJenis('PEMASUKAN')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${jenis === 'PEMASUKAN' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+              💰 Pemasukan
+            </button>
+            <button type="button" onClick={() => setJenis('PENGELUARAN')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${jenis === 'PENGELUARAN' ? 'bg-white text-red-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+              🏷️ Pengeluaran
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 mb-1">Tanggal</label>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Tanggal</label>
             <input type="date" value={formTanggal} onChange={(e) => setFormTanggal(e.target.value)}
-              className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900" />
+              className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" />
           </div>
           {jenis === 'PEMASUKAN' ? (
             <>
               <div>
-                <label className="block text-[11px] font-bold text-gray-500 mb-1">Sumber</label>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Sumber</label>
                 <select value={formSumber} onChange={(e) => setFormSumber(e.target.value)}
-                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900">
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
                   <option value="ZAKAT_MAL">Zakat Mal</option>
                   <option value="SEDEKAH_INFAK">Sedekah / Infak</option>
                 </select>
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-gray-500 mb-1">Muzakki (opsional)</label>
-                <input type="text" placeholder="Nama" value={formMuzakki} onChange={(e) => setFormMuzakki(e.target.value)}
-                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900" />
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Muzakki (opsional)</label>
+                <input type="text" placeholder="Nama muzakki" value={formMuzakki} onChange={(e) => setFormMuzakki(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" />
               </div>
             </>
           ) : (
             <>
               <div>
-                <label className="block text-[11px] font-bold text-gray-500 mb-1">Kategori</label>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Kategori</label>
                 <select value={formKategori} onChange={(e) => setFormKategori(e.target.value)}
-                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900">
-                  <option value="DISTRIBUSI">Distribusi</option>
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
                   <option value="ATK">ATK</option>
                   <option value="PERLENGKAPAN_DISTRIBUSI">Perlengkapan Distribusi</option>
                   <option value="OPERASIONAL">Operasional</option>
@@ -231,71 +258,81 @@ export default function BendaharaPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-gray-500 mb-1">Deskripsi</label>
-                <input type="text" placeholder="Mis: Beli buku & pulpen" value={formDeskripsi} onChange={(e) => setFormDeskripsi(e.target.value)}
-                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900" />
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Deskripsi</label>
+                <input type="text" placeholder="Mis: Beli buku &amp; pulpen" value={formDeskripsi} onChange={(e) => setFormDeskripsi(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" />
               </div>
             </>
           )}
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 mb-1">Jumlah (Rp)</label>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Jumlah (Rp)</label>
             <input type="number" required min="1" placeholder="0" value={formJumlah} onChange={(e) => setFormJumlah(e.target.value)}
-              className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900" />
+              className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" />
           </div>
         </div>
 
         {jenis === 'PEMASUKAN' && (
           <div>
-            <label className="block text-[11px] font-bold text-gray-500 mb-1">Keterangan</label>
-            <input type="text" placeholder="Opsional" value={formKet} onChange={(e) => setFormKet(e.target.value)}
-              className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900" />
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Keterangan (opsional)</label>
+            <input type="text" placeholder="Catatan tambahan" value={formKet} onChange={(e) => setFormKet(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" />
           </div>
         )}
 
-        <button type="submit"
-          className={`w-full sm:w-auto py-1.5 px-6 text-white rounded-lg text-xs font-bold ${jenis === 'PEMASUKAN' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}`}>
-          Simpan
-        </button>
+        <div className="flex justify-end">
+          <button type="submit" disabled={submitting}
+            className={`flex items-center gap-2 py-2 px-6 text-white rounded-xl text-sm font-bold transition disabled:opacity-60 ${jenis === 'PEMASUKAN' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}`}>
+            {submitting ? <><Spinner /> Menyimpan...</> : 'Simpan Transaksi'}
+          </button>
+        </div>
       </form>
 
-      {/* FILTER BULAN */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+      {/* ── FILTER BULAN ── */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <p className="text-xs font-bold text-gray-700 mb-3">🗓️ Filter Periode</p>
         <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
           <div>
             <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Tahun</label>
             <select value={filterTahun} onChange={(e) => setFilterTahun(e.target.value)}
-              className="w-full mt-1 px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900">
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
               {tahunList.map((t) => (<option key={t} value={t}>{t}</option>))}
             </select>
           </div>
           <div>
             <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Bulan</label>
             <select value={filterBulan} onChange={(e) => setFilterBulan(e.target.value)}
-              className="w-full mt-1 px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900">
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
               {bulanOptions.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
             </select>
+          </div>
+          <div className="flex-1 hidden sm:block" />
+          <div className="text-right">
+            <p className="text-[10px] text-gray-400 uppercase tracking-wide">Periode aktif</p>
+            <p className="text-sm font-bold text-gray-800">{formatNamaBulan(filterBulan)} {filterTahun}</p>
           </div>
         </div>
       </div>
 
-      {/* RINGKASAN SALDO */}
+      {/* ── RINGKASAN SALDO ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
           <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Saldo Awal</p>
-          <p className="text-lg font-bold text-gray-900 mt-1">{formatRupiah(saldoAwal)}</p>
-          <p className="text-[10px] text-gray-400">{formatNamaBulan(filterBulan)} {filterTahun}</p>
+          <p className="text-base font-extrabold text-gray-900 mt-1">{formatRupiah(saldoAwal)}</p>
+          <p className="text-[10px] text-gray-400 mt-0.5">{formatNamaBulan(filterBulan)} {filterTahun}</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Pemasukan</p>
-          <p className="text-lg font-bold text-emerald-600 mt-1">{formatRupiah(totalPemasukan)}</p>
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 shadow-sm">
+          <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide">Pemasukan</p>
+          <p className="text-base font-extrabold text-emerald-700 mt-1">{formatRupiah(totalPemasukan)}</p>
+          <p className="text-[10px] text-emerald-400 mt-0.5">Bulan ini</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Pengeluaran</p>
-          <p className="text-lg font-bold text-red-600 mt-1">{formatRupiah(totalPengeluaran)}</p>
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 shadow-sm">
+          <p className="text-[10px] font-semibold text-red-600 uppercase tracking-wide">Pengeluaran</p>
+          <p className="text-base font-extrabold text-red-700 mt-1">{formatRupiah(totalPengeluaran)}</p>
+          <p className="text-[10px] text-red-400 mt-0.5">Termasuk distribusi</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Saldo Saat Ini</p>
-          <p className={`text-lg font-bold mt-1 ${saldoSaatIni < 0 ? 'text-red-600' : 'text-gray-900'}`}>
+        <div className={`rounded-2xl p-4 shadow-sm border ${saldoSaatIni < 0 ? 'bg-red-50 border-red-300' : 'bg-gradient-to-br from-emerald-600 to-emerald-700 border-emerald-500'}`}>
+          <p className={`text-[10px] font-semibold uppercase tracking-wide ${saldoSaatIni < 0 ? 'text-red-600' : 'text-emerald-100'}`}>Saldo Saat Ini</p>
+          <p className={`text-base font-extrabold mt-1 ${saldoSaatIni < 0 ? 'text-red-700' : 'text-white'}`}>
             {formatRupiah(saldoSaatIni)}
           </p>
           {(() => {
@@ -313,8 +350,8 @@ export default function BendaharaPage() {
                     setIsSaving(false);
                   }
                 }} disabled={isSaving}
-                  className="mt-2 w-full py-1.5 px-3 bg-blue-600 text-white rounded-lg text-[10px] font-semibold hover:bg-blue-700 disabled:opacity-50">
-                  {isSaving ? 'Menyimpan...' : `Simpan Saldo ${formatNamaBulan(filterBulan)}`}
+                  className="mt-2 w-full py-1.5 px-3 bg-white/20 hover:bg-white/30 text-white rounded-lg text-[10px] font-semibold disabled:opacity-50 transition flex items-center justify-center gap-1.5">
+                  {isSaving ? <><Spinner size={3} /> Menyimpan...</> : `💾 Simpan ${formatNamaBulan(filterBulan)}`}
                 </button>
               );
             }
@@ -331,54 +368,74 @@ export default function BendaharaPage() {
                     setIsSaving(false);
                   }
                 }} disabled={isSaving}
-                  className="mt-2 w-full py-1.5 px-3 bg-amber-500 text-white rounded-lg text-[10px] font-semibold hover:bg-amber-600 disabled:opacity-50">
-                  {isSaving ? 'Menyimpan...' : `Update Saldo ${formatNamaBulan(filterBulan)}`}
+                  className="mt-2 w-full py-1.5 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-semibold disabled:opacity-50 transition flex items-center justify-center gap-1.5">
+                  {isSaving ? <><Spinner size={3} /> Menyimpan...</> : `🔄 Update ${formatNamaBulan(filterBulan)}`}
                 </button>
               );
             }
-            return <p className="mt-2 text-[10px] text-emerald-600 font-semibold">✓ Tersimpan</p>;
+            return (
+              <p className={`mt-2 text-[10px] font-semibold flex items-center gap-1 ${saldoSaatIni < 0 ? 'text-red-600' : 'text-emerald-100'}`}>
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" /></svg>
+                Tersimpan
+              </p>
+            );
           })()}
         </div>
       </div>
 
-      {/* RIWAYAT TRANSAKSI */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-          <span className="text-sm font-bold text-gray-900">Riwayat Transaksi</span>
-          <span className="text-[10px] text-gray-400">{dataFiltered.length} transaksi</span>
+      {/* ── RIWAYAT TRANSAKSI ── */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-gray-900">📋 Riwayat Transaksi</span>
+            <span className="text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-semibold">{dataFiltered.length}</span>
+          </div>
+          <p className="text-xs text-gray-500">{formatNamaBulan(filterBulan)} {filterTahun}</p>
         </div>
         {loading ? (
-          <div className="p-6 text-center text-xs text-gray-400">Memuat...</div>
+          <div className="p-5 space-y-3">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="skeleton h-4 w-16" />
+                <div className="skeleton h-4 w-14 rounded-full" />
+                <div className="skeleton h-4 flex-1" />
+                <div className="skeleton h-4 w-24" />
+              </div>
+            ))}
+          </div>
         ) : dataFiltered.length === 0 ? (
-          <div className="p-6 text-center text-xs text-gray-400">Belum ada data.</div>
+          <div className="p-10 text-center">
+            <p className="text-3xl mb-2">📭</p>
+            <p className="text-sm text-gray-400">Belum ada transaksi di bulan ini.</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="bg-gray-50 text-gray-500 uppercase text-[10px] tracking-wider">
+                <tr className="bg-gray-50 text-gray-500 uppercase text-[10px] tracking-wider border-b border-gray-100">
                   <th className="p-3">Tanggal</th>
                   <th className="p-3">Jenis</th>
                   <th className="p-3">Keterangan</th>
                   <th className="p-3 text-right">Jumlah</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-50">
                 {dataFiltered.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="p-3 text-gray-900 whitespace-nowrap">{formatTanggalSingkat(item.tanggal)}</td>
+                  <tr key={item.id} className="hover:bg-gray-50 transition">
+                    <td className="p-3 text-gray-700 whitespace-nowrap font-medium">{formatTanggalSingkat(item.tanggal)}</td>
                     <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                        item.jenis === 'PEMASUKAN' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        item.jenis === 'PEMASUKAN' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
                       }`}>
-                        {item.jenis === 'PEMASUKAN' ? 'Masuk' : 'Keluar'}
+                        {item.jenis === 'PEMASUKAN' ? '↑ Masuk' : '↓ Keluar'}
                       </span>
                     </td>
                     <td className="p-3 text-gray-700">
                       <span className="font-semibold">{item.label}</span>
-                      {item.keterangan && <span className="text-gray-400"> — {item.keterangan}</span>}
+                      {item.keterangan && <span className="text-gray-400 ml-1">— {item.keterangan}</span>}
                     </td>
-                    <td className={`p-3 text-right font-semibold ${item.jenis === 'PEMASUKAN' ? 'text-emerald-600' : 'text-red-600'}`}>
-                      {item.jenis === 'PEMASUKAN' ? '+' : '-'}{formatRupiah(item.jumlah)}
+                    <td className={`p-3 text-right font-bold ${item.jenis === 'PEMASUKAN' ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {item.jenis === 'PEMASUKAN' ? '+' : '−'}{formatRupiah(item.jumlah)}
                     </td>
                   </tr>
                 ))}

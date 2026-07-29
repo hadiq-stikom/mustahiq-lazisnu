@@ -34,6 +34,15 @@ function bulanLalu(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
+function SkeletonCard({ wide = false }: { wide?: boolean }) {
+  return (
+    <div className={`bg-white border border-gray-200 rounded-2xl p-5 shadow-sm ${wide ? 'col-span-2' : ''}`}>
+      <div className="skeleton h-3 w-20 mb-3" />
+      <div className="skeleton h-8 w-36" />
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -96,7 +105,6 @@ export default function AdminDashboard() {
     const savedSorted = (semuaSaldo ?? []).map(s => s.bulan).sort();
     const saldoTerakhir = savedSorted.length > 0 ? savedSorted[savedSorted.length - 1] : null;
 
-    // Cari bulan yang paling awal belum tersimpan (sejak saldoTerakhir + 1 sampai bIni - 1)
     let perluDisimpan: string | null = null;
     if (saldoTerakhir) {
       let cursor = saldoTerakhir;
@@ -111,7 +119,6 @@ export default function AdminDashboard() {
       }
     }
 
-    // Saldo sekarang: dari saldo terakhir + transaksi bulan ini
     const saldoTerakhirValue = saldoTerakhir
       ? (await supabase.from('saldo_bulanan').select('saldo').eq('bulan', saldoTerakhir).single()).data as { saldo: number } | null
       : null;
@@ -158,72 +165,131 @@ export default function AdminDashboard() {
     setMenyimpan(false);
   };
 
-  if (loading || !stats) {
-    return <div className="text-sm text-gray-500">Memuat dashboard...</div>;
-  }
-
-  const cards = [
-    { label: 'Total Mustahiq', value: stats.totalMustahiq.toString(), unit: 'Jiwa' },
-    { label: 'Wilayah RT', value: stats.totalRT.toString(), unit: 'RT' },
-    { label: 'Total Penerimaan', value: formatRupiah(stats.totalPenerimaan) },
-    { label: 'Sudah Disalurkan', value: formatRupiah(stats.totalDistribusi) },
-    { label: 'Total Pengeluaran', value: formatRupiah(stats.totalPengeluaran) },
-    { label: 'Saldo Kas', value: formatRupiah(stats.saldo), warn: stats.saldo < 0 },
-    { label: 'Distribusi Bulan Ini', value: formatRupiah(stats.distribusiBulanIni) },
-    { label: 'Pengeluaran Bulan Ini', value: formatRupiah(stats.pengeluaranBulanIni) },
-  ];
-
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-        <h1 className="text-lg sm:text-xl font-bold text-gray-900">Dashboard Admin</h1>
+    <div className="space-y-5 sm:space-y-6">
+      {/* ── HEADER ── */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+        <div>
+          <h1 className="text-xl font-extrabold text-gray-900">📊 Dashboard Admin</h1>
+          <p className="text-xs text-gray-500 mt-0.5">Ringkasan data LAZISNU Badean</p>
+        </div>
         <div className="flex items-center gap-2 flex-wrap">
           {periodeAktif && (
-            <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">
-              Periode Aktif: {periodeAktif}
+            <span className="text-xs bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1 rounded-full font-semibold">
+              🎯 Periode: {periodeAktif}
             </span>
           )}
           {bulanYangPerluDisimpan && (
             <button
               onClick={handleSimpanSaldo}
               disabled={menyimpan}
-              className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-semibold hover:bg-blue-100 disabled:opacity-50"
+              className="flex items-center gap-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-full font-semibold transition disabled:opacity-60 shadow-sm"
             >
-              {menyimpan ? 'Menyimpan...' : `Simpan Saldo ${formatBulan(bulanYangPerluDisimpan)}`}
+              {menyimpan ? (
+                <>
+                  <svg className="w-3.5 h-3.5 animate-spin-slow" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Menyimpan...
+                </>
+              ) : (
+                <>💾 Simpan Saldo {formatBulan(bulanYangPerluDisimpan)}</>
+              )}
             </button>
           )}
-          {!bulanYangPerluDisimpan && (
-            <span className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-semibold">
-              Semua saldo tersimpan
+          {!loading && !bulanYangPerluDisimpan && (
+            <span className="flex items-center gap-1 text-xs bg-green-50 border border-green-200 text-green-700 px-3 py-1 rounded-full font-semibold">
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+              </svg>
+              Saldo Tersimpan
             </span>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {cards.map((card) => (
-          <div key={card.label} className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-sm">
-            <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide truncate">{card.label}</p>
-            <p className={`text-lg sm:text-2xl font-bold mt-1 truncate ${card.warn ? 'text-red-600' : 'text-gray-900'}`}>
-              {card.value}
-            </p>
-            {card.unit && <p className="text-[10px] sm:text-xs text-gray-400">{card.unit}</p>}
-          </div>
-        ))}
-      </div>
+      {/* ── KPI CARDS ── */}
+      {loading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <SkeletonCard wide />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      ) : stats && (
+        <>
+          {/* Row 1: Saldo besar + 3 pendukung */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Saldo Kas — wide / prominent */}
+            <div className={`col-span-2 rounded-2xl p-5 shadow-md ${stats.saldo < 0 ? 'bg-red-600' : 'bg-gradient-to-br from-emerald-600 to-emerald-700'} text-white`}>
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/70">💰 Saldo Kas Saat Ini</p>
+              <p className="text-3xl font-extrabold mt-1">{formatRupiah(stats.saldo)}</p>
+              <p className="text-xs text-white/60 mt-2">Berdasarkan saldo tersimpan + transaksi bulan ini</p>
+            </div>
 
-      {stats.penerimaanPerSumber.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-sm">
-          <h2 className="text-sm font-bold text-gray-900 mb-3">Penerimaan Per Sumber</h2>
-          <div className="space-y-3">
-            {stats.penerimaanPerSumber.map((s) => (
-              <div key={s.sumber} className="flex justify-between items-center">
-                <span className="text-sm text-gray-700">
-                  {s.sumber === 'ZAKAT_MAL' ? 'Zakat Mal' : 'Sedekah / Infak'}
-                </span>
-                <span className="text-sm font-semibold text-gray-900">{formatRupiah(s.total)}</span>
+            {/* Total Penerimaan */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">📥 Total Penerimaan</p>
+              <p className="text-xl font-extrabold text-gray-900 mt-1">{formatRupiah(stats.totalPenerimaan)}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">Semua waktu</p>
+            </div>
+
+            {/* Total Disalurkan */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">📤 Sudah Disalurkan</p>
+              <p className="text-xl font-extrabold text-orange-600 mt-1">{formatRupiah(stats.totalDistribusi)}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">Distribusi ke mustahiq</p>
+            </div>
+          </div>
+
+          {/* Row 2: 6 stats kecil */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {[
+              { label: 'Total Mustahiq', value: `${stats.totalMustahiq} Jiwa`, color: 'text-gray-900', icon: '👥' },
+              { label: 'Wilayah RT', value: `${stats.totalRT} RT`, color: 'text-gray-900', icon: '🏘️' },
+              { label: 'Total Pengeluaran', value: formatRupiah(stats.totalPengeluaran), color: 'text-red-600', icon: '💸' },
+              { label: 'Distrib. Bulan Ini', value: formatRupiah(stats.distribusiBulanIni), color: 'text-orange-600', icon: '🎯' },
+              { label: 'Keluar Bulan Ini', value: formatRupiah(stats.pengeluaranBulanIni), color: 'text-red-600', icon: '📤' },
+              { label: 'Saldo Bersih Ini', value: formatRupiah(stats.saldo), color: stats.saldo < 0 ? 'text-red-600' : 'text-emerald-700', icon: '💡' },
+            ].map(card => (
+              <div key={card.label} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                <p className="text-lg">{card.icon}</p>
+                <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mt-1 leading-tight">{card.label}</p>
+                <p className={`text-sm font-extrabold mt-1 ${card.color}`}>{card.value}</p>
               </div>
             ))}
+          </div>
+        </>
+      )}
+
+      {/* ── PENERIMAAN PER SUMBER ── */}
+      {stats && stats.penerimaanPerSumber.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+          <h2 className="text-sm font-bold text-gray-900 mb-4">📊 Penerimaan Per Sumber</h2>
+          <div className="space-y-3">
+            {stats.penerimaanPerSumber.map((s) => {
+              const pct = stats.totalPenerimaan > 0 ? Math.round((s.total / stats.totalPenerimaan) * 100) : 0;
+              return (
+                <div key={s.sumber}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm text-gray-700 font-medium">
+                      {s.sumber === 'ZAKAT_MAL' ? '🕌 Zakat Mal' : '🤲 Sedekah / Infak'}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400">{pct}%</span>
+                      <span className="text-sm font-bold text-gray-900">{formatRupiah(s.total)}</span>
+                    </div>
+                  </div>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
