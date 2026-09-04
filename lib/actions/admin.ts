@@ -81,46 +81,12 @@ export async function hapusDistribusi(id: number) {
 
 export async function simpanSaldoBulanan(bulan: string) {
   await requireAdmin();
-  const supabase = await createServerSupabase();
-
-  const [tahun, bulanNum] = bulan.split('-').map(Number);
-
-  const prevDate = new Date(tahun, bulanNum - 1, 1);
-  prevDate.setMonth(prevDate.getMonth() - 1);
-  const prevBulan = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
-
-  const { data: prevSaldo } = await supabase
-    .from('saldo_bulanan')
-    .select('saldo')
-    .eq('bulan', prevBulan)
-    .maybeSingle();
-
-  const saldoAwal = prevSaldo?.saldo ?? 0;
-
-  const tglAwal = `${bulan}-01`;
-  const tglAkhirDate = new Date(tahun, bulanNum, 1);
-  const tglAkhir = tglAkhirDate.toISOString().split('T')[0];
-
-  const [penerimaanResult, distribusiResult, pengeluaranResult] = await Promise.all([
-    supabase.from('penerimaan').select('jumlah').gte('tanggal', tglAwal).lt('tanggal', tglAkhir),
-    supabase.from('distribusi').select('jumlah').gte('tanggal', tglAwal).lt('tanggal', tglAkhir),
-    supabase.from('pengeluaran').select('jumlah').gte('tanggal', tglAwal).lt('tanggal', tglAkhir),
-  ]);
-
-  const totalPenerimaan = (penerimaanResult.data ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
-  const totalDistribusi = (distribusiResult.data ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
-  const totalPengeluaran = (pengeluaranResult.data ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
-
-  const saldoAkhir = saldoAwal + totalPenerimaan - totalDistribusi - totalPengeluaran;
-
-  const { error } = await supabase.from('saldo_bulanan').upsert(
-    { bulan, saldo: saldoAkhir },
-    { onConflict: 'bulan' }
-  );
-
-  if (error) throw new Error(error.message);
+  const { hitungSaldoSekarang, simpanSaldoBulananAction } = await import('./saldo');
+  
+  const saldoAkhir = await hitungSaldoSekarang(bulan);
+  await simpanSaldoBulananAction(bulan, saldoAkhir);
+  
   revalidatePath('/admin');
-
   return saldoAkhir;
 }
 
@@ -226,3 +192,80 @@ export async function getLaporanSaldo(dariBulan: string, sampaiBulan: string) {
 
   return { items, totalPenerimaan, totalDistribusi, totalPengeluaran, saldoAwal, saldoAkhir };
 }
+
+export async function updateNamaRT(id: number, nama_rt: string) {
+  await requireAdmin();
+  const supabase = await createServerSupabase();
+
+  const trimmed = nama_rt.trim();
+  if (!trimmed) throw new Error('Nama RT tidak boleh kosong.');
+
+  const { error } = await supabase
+    .from('daftar_rt')
+    .update({ nama_rt: trimmed })
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath('/admin/mustahiq');
+  revalidatePath('/');
+}
+
+export async function tambahRTkePeriode(periodeId: number, rtId: number) {
+  await requireAdmin();
+  const supabase = await createServerSupabase();
+
+  // Cek duplikat
+  const { data: existing } = await supabase
+    .from('periode_rt')
+    .select('id')
+    .eq('periode_id', periodeId)
+    .eq('rt_id', rtId)
+    .maybeSingle();
+
+  if (existing) return; // sudah ada, tidak perlu insert
+
+  const { error } = await supabase.from('periode_rt').insert({ periode_id: periodeId, rt_id: rtId });
+  if (error) throw new Error(error.message);
+
+  revalidatePath('/admin/perencanaan');
+  revalidatePath('/');
+}
+
+export async function hapusRTdariPeriode(periodeId: number, rtId: number) {
+  await requireAdmin();
+  const supabase = await createServerSupabase();
+
+  // Cek apakah sudah ada distribusi ke mustahiq RT ini dalam periode
+  const { data: mustahiqInRT } = await supabase
+    .from('penerima_zakat')
+    .select('id')
+    .eq('rt_id', rtId);
+
+  const mustahiqIds = (mustahiqInRT ?? []).map((m) => m.id);
+  if (mustahiqIds.length > 0) {
+    const { count } = await supabase
+      .from('distribusi')
+      .select('*', { count: 'exact', head: true })
+      .eq('periode_id', periodeId)
+      .in('mustahiq_id', mustahiqIds);
+
+    if (count && count > 0) {
+      throw new Error(
+        `Tidak dapat menghapus RT ini — sudah ada ${count} distribusi tercatat untuk mustahiq RT ini dalam periode aktif.`
+      );
+    }
+  }
+
+  const { error } = await supabase
+    .from('periode_rt')
+    .delete()
+    .eq('periode_id', periodeId)
+    .eq('rt_id', rtId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath('/admin/perencanaan');
+  revalidatePath('/');
+}
+

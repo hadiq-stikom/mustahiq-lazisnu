@@ -62,45 +62,12 @@ export async function hapusTransaksiBendahara(id: number, jenis: 'penerimaan' | 
 }
 
 export async function simpanSaldoBulanBendahara(bulan: string) {
-  const user = await requireBendahara();
-  const supabase = await createServerSupabase();
+  await requireBendahara();
+  const { hitungSaldoSekarang, simpanSaldoBulananAction } = await import('./saldo');
+  
+  const saldoAkhir = await hitungSaldoSekarang(bulan);
+  await simpanSaldoBulananAction(bulan, saldoAkhir);
 
-  const [tahun, bulanNum] = bulan.split('-').map(Number);
-
-  const prevDate = new Date(tahun, bulanNum - 1, 1);
-  prevDate.setMonth(prevDate.getMonth() - 1);
-  const prevBulan = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
-
-  const { data: prevSaldo } = await supabase
-    .from('saldo_bulanan')
-    .select('saldo')
-    .eq('bulan', prevBulan)
-    .maybeSingle();
-
-  const saldoAwal = prevSaldo?.saldo ?? 0;
-
-  const tglAwal = `${bulan}-01`;
-  const tglAkhirDate = new Date(tahun, bulanNum, 1);
-  const tglAkhir = tglAkhirDate.toISOString().split('T')[0];
-
-  const [penerimaanResult, distribusiResult, pengeluaranResult] = await Promise.all([
-    supabase.from('penerimaan').select('jumlah').gte('tanggal', tglAwal).lt('tanggal', tglAkhir),
-    supabase.from('distribusi').select('jumlah').gte('tanggal', tglAwal).lt('tanggal', tglAkhir),
-    supabase.from('pengeluaran').select('jumlah').gte('tanggal', tglAwal).lt('tanggal', tglAkhir),
-  ]);
-
-  const totalPenerimaan = (penerimaanResult.data ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
-  const totalDistribusi = (distribusiResult.data ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
-  const totalPengeluaran = (pengeluaranResult.data ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
-
-  const saldoAkhir = saldoAwal + totalPenerimaan - totalDistribusi - totalPengeluaran;
-
-  const { error } = await supabase.from('saldo_bulanan').upsert(
-    { bulan, saldo: saldoAkhir },
-    { onConflict: 'bulan' }
-  );
-
-  if (error) throw new Error(error.message);
   revalidatePath('/bendahara');
   revalidatePath('/admin');
 

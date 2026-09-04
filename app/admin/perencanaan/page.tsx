@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/utils/supabase';
-import { bukaPeriodeDistribusi, resetPeriodeRt, tutupPeriode } from '@/lib/actions/admin';
+import { bukaPeriodeDistribusi, resetPeriodeRt, tutupPeriode, tambahRTkePeriode, hapusRTdariPeriode } from '@/lib/actions/admin';
 import { formatRupiah, formatTanggalSingkat } from '@/lib/utils';
 import ConfirmModal from '@/components/ConfirmModal';
 import Toast from '@/components/Toast';
@@ -10,9 +10,15 @@ import type { RT, PeriodeDistribusi } from '@/lib/types';
 
 export default function PerencanaanPage() {
   const [daftarRT, setDaftarRT] = useState<(RT & { jumlah_mustahiq: number })[]>([]);
+  const [semuaDaftarRT, setSemuaDaftarRT] = useState<(RT & { jumlah_mustahiq: number })[]>([]);
+  const [rtDalamPeriodeAktif, setRtDalamPeriodeAktif] = useState<Set<number>>(new Set());
   const [periodeAktif, setPeriodeAktif] = useState<PeriodeDistribusi | null>(null);
   const [semuaPeriode, setSemuaPeriode] = useState<PeriodeDistribusi[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Kelola RT periode
+  const [showKelolaRTPeriode, setShowKelolaRTPeriode] = useState(false);
+  const [loadingRTAction, setLoadingRTAction] = useState<number | null>(null);
 
   // Active period stats
   const [activeStats, setActiveStats] = useState<{ totalMustahiq: number; sudahTerima: number; totalRupiah: number }>({
@@ -52,9 +58,9 @@ export default function PerencanaanPage() {
     if (rtsResult.data && mustahiqResult.data) {
       const countMap: Record<number, number> = {};
       mustahiqResult.data.forEach((m) => { countMap[m.rt_id] = (countMap[m.rt_id] || 0) + 1; });
-      setDaftarRT(rtsResult.data
-        .filter((rt) => !rtTerpakai.has(rt.id))
-        .map((rt) => ({ ...rt, jumlah_mustahiq: countMap[rt.id] || 0 })));
+      const allWithCount = rtsResult.data.map((rt) => ({ ...rt, jumlah_mustahiq: countMap[rt.id] || 0 }));
+      setSemuaDaftarRT(allWithCount);
+      setDaftarRT(allWithCount.filter((rt) => !rtTerpakai.has(rt.id)));
     }
 
     const allP = periodesResult.data ?? [];
@@ -82,31 +88,18 @@ export default function PerencanaanPage() {
       }
 
       setActiveStats({ totalMustahiq, sudahTerima, totalRupiah });
+      setRtDalamPeriodeAktif(new Set(rtIds));
     }
 
     // Hitung saldo sekarang
-    const now = new Date();
-    const bulanIni = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const tglAwal = `${bulanIni}-01`;
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const tglAkhir = nextMonth.toISOString().split('T')[0];
-
-    const prevDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    prevDate.setMonth(prevDate.getMonth() - 1);
-    const prevBulan = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
-
-    const [prevSaldoResult, penerimaanResult, distribusiResult, pengeluaranResult] = await Promise.all([
-      supabase.from('saldo_bulanan').select('saldo').eq('bulan', prevBulan).maybeSingle(),
-      supabase.from('penerimaan').select('jumlah').gte('tanggal', tglAwal).lt('tanggal', tglAkhir),
-      supabase.from('distribusi').select('jumlah').gte('tanggal', tglAwal).lt('tanggal', tglAkhir),
-      supabase.from('pengeluaran').select('jumlah').gte('tanggal', tglAwal).lt('tanggal', tglAkhir),
-    ]);
-
-    const saldoAwal = prevSaldoResult.data?.saldo ?? 0;
-    const totalPenerimaan = (penerimaanResult.data ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
-    const totalDistribusi = (distribusiResult.data ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
-    const totalPengeluaran = (pengeluaranResult.data ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
-    setSaldoSekarang(saldoAwal + totalPenerimaan - totalDistribusi - totalPengeluaran);
+    try {
+      const saldoAction = await import('@/lib/actions/saldo');
+      const saldo = await saldoAction.hitungSaldoSekarang();
+      setSaldoSekarang(saldo);
+    } catch (e) {
+      console.error(e);
+      setSaldoSekarang(0);
+    }
 
     setLoading(false);
   }, []);
@@ -192,6 +185,34 @@ export default function PerencanaanPage() {
     }
   };
 
+  const handleTambahRT = async (rtId: number) => {
+    if (!periodeAktif) return;
+    setLoadingRTAction(rtId);
+    try {
+      await tambahRTkePeriode(periodeAktif.id, rtId);
+      setRtDalamPeriodeAktif((prev) => new Set([...prev, rtId]));
+      setToast({ show: true, message: 'RT berhasil ditambahkan ke periode!', type: 'success' });
+      loadData();
+    } catch (err) {
+      setToast({ show: true, message: err instanceof Error ? err.message : 'Gagal', type: 'error' });
+    }
+    setLoadingRTAction(null);
+  };
+
+  const handleHapusRT = async (rtId: number) => {
+    if (!periodeAktif) return;
+    setLoadingRTAction(rtId);
+    try {
+      await hapusRTdariPeriode(periodeAktif.id, rtId);
+      setRtDalamPeriodeAktif((prev) => { const next = new Set(prev); next.delete(rtId); return next; });
+      setToast({ show: true, message: 'RT berhasil dihapus dari periode.', type: 'success' });
+      loadData();
+    } catch (err) {
+      setToast({ show: true, message: err instanceof Error ? err.message : 'Gagal', type: 'error' });
+    }
+    setLoadingRTAction(null);
+  };
+
   if (loading) {
     return (
       <div className="space-y-4 max-w-3xl">
@@ -263,6 +284,79 @@ export default function PerencanaanPage() {
               </p>
               <p className="text-[10px] text-emerald-200 mt-0.5">Oleh petugas di lapangan</p>
             </div>
+          </div>
+
+          {/* ── KELOLA RT PERIODE AKTIF ── */}
+          <div className="mt-4 border-t border-emerald-700/40 pt-4">
+            <button
+              onClick={() => setShowKelolaRTPeriode((v) => !v)}
+              className="flex items-center gap-2 text-xs font-bold text-emerald-300 hover:text-white transition"
+            >
+              <svg className={`w-4 h-4 transition-transform ${showKelolaRTPeriode ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+              🏘️ Kelola RT dalam Periode ini ({rtDalamPeriodeAktif.size} RT aktif)
+            </button>
+
+            {showKelolaRTPeriode && (
+              <div className="mt-3 space-y-4 animate-fade-in">
+                {/* RT yang sedang dalam periode */}
+                <div>
+                  <p className="text-[10px] font-bold text-emerald-300 uppercase tracking-wide mb-2">RT yang ditargetkan saat ini:</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {semuaDaftarRT.filter((rt) => rtDalamPeriodeAktif.has(rt.id)).map((rt) => (
+                      <div key={rt.id} className="bg-white/15 border border-white/20 rounded-xl p-2.5 flex items-start justify-between gap-1">
+                        <div className="min-w-0">
+                          <p className="font-bold text-white text-xs">RT.{rt.no_rt}</p>
+                          <p className="text-emerald-300 text-[10px] truncate">{rt.nama_rt}</p>
+                          <p className="text-emerald-200 text-[10px]">{rt.jumlah_mustahiq} jiwa</p>
+                        </div>
+                        <button
+                          onClick={() => handleHapusRT(rt.id)}
+                          disabled={loadingRTAction === rt.id}
+                          title="Hapus RT dari periode"
+                          className="shrink-0 text-red-300 hover:text-red-100 disabled:opacity-50 transition mt-0.5"
+                        >
+                          {loadingRTAction === rt.id ? (
+                            <svg className="w-3.5 h-3.5 animate-spin-slow" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                          ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* RT yang belum dalam periode */}
+                {daftarRT.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-emerald-400/70 uppercase tracking-wide mb-2">Tambahkan RT lain:</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                      {daftarRT.map((rt) => (
+                        <button
+                          key={rt.id}
+                          onClick={() => handleTambahRT(rt.id)}
+                          disabled={loadingRTAction === rt.id}
+                          className="bg-white/8 hover:bg-white/15 border border-white/10 hover:border-white/25 rounded-xl p-2.5 text-left transition disabled:opacity-50"
+                        >
+                          <p className="font-bold text-emerald-300 text-xs flex items-center gap-1">
+                            {loadingRTAction === rt.id ? (
+                              <svg className="w-3 h-3 animate-spin-slow" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                            ) : (
+                              <span className="text-emerald-400">＋</span>
+                            )}
+                            RT.{rt.no_rt}
+                          </p>
+                          <p className="text-emerald-400/70 text-[10px] truncate">{rt.nama_rt}</p>
+                          <p className="text-emerald-300/80 text-[10px]">{rt.jumlah_mustahiq} jiwa</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       ) : (

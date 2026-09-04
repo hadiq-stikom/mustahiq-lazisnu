@@ -59,29 +59,19 @@ export default function AdminDashboard() {
       { count: rtCount },
       { data: penerimaan },
       { data: distribusi },
-      { data: distribusiBulan },
       { data: periodes },
       { data: semuaSaldo },
-      { data: penerimaanBulanIni },
+      { data: semuaPengeluaran },
       { data: distribusiBulanIniRaw },
       { data: pengeluaranBulanIniRaw },
-      { data: semuaPengeluaran },
     ] = await Promise.all([
       supabase.from('penerima_zakat').select('*', { count: 'exact', head: true }),
       supabase.from('daftar_rt').select('*', { count: 'exact', head: true }),
       supabase.from('penerimaan').select('jumlah, sumber'),
       supabase.from('distribusi').select('jumlah'),
-      supabase
-        .from('distribusi')
-        .select('jumlah')
-        .gte('tanggal', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]),
       supabase.from('periode_distribusi').select('nama').eq('status', 'AKTIF').limit(1),
       supabase.from('saldo_bulanan').select('bulan').order('bulan', { ascending: false }),
-      supabase
-        .from('penerimaan')
-        .select('jumlah')
-        .gte('tanggal', `${bIni}-01`)
-        .lt('tanggal', `${parseInt(bIni.split('-')[0])}-${String(parseInt(bIni.split('-')[1]) + 1).padStart(2, '0')}-01`),
+      supabase.from('pengeluaran').select('jumlah'),
       supabase
         .from('distribusi')
         .select('jumlah')
@@ -92,14 +82,12 @@ export default function AdminDashboard() {
         .select('jumlah')
         .gte('tanggal', `${bIni}-01`)
         .lt('tanggal', `${parseInt(bIni.split('-')[0])}-${String(parseInt(bIni.split('-')[1]) + 1).padStart(2, '0')}-01`),
-      supabase.from('pengeluaran').select('jumlah'),
     ]);
 
     const totalPenerimaan = (penerimaan ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
     const totalDistribusi = (distribusi ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
 
     const dIni = (distribusiBulanIniRaw ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
-    const pIni = (penerimaanBulanIni ?? []).reduce((s, r) => s + (r.jumlah || 0), 0);
     const pngIni = (pengeluaranBulanIniRaw ?? []).reduce((s: number, r: { jumlah: number }) => s + (r.jumlah || 0), 0);
 
     const savedSet = new Set((semuaSaldo ?? []).map(s => s.bulan));
@@ -124,8 +112,15 @@ export default function AdminDashboard() {
       ? (await supabase.from('saldo_bulanan').select('saldo').eq('bulan', saldoTerakhir).single()).data as { saldo: number } | null
       : null;
     const totalPengeluaran = (semuaPengeluaran ?? []).reduce((s: number, r: { jumlah: number }) => s + (r.jumlah || 0), 0);
-    const saldoAwal = saldoTerakhirValue?.saldo ?? 0;
-    const saldoSekarang = saldoAwal + pIni - dIni - pngIni;
+
+    let saldoSekarang = 0;
+    try {
+      const saldoAction = await import('@/lib/actions/saldo');
+      saldoSekarang = await saldoAction.hitungSaldoSekarang();
+    } catch (e) {
+      console.error(e);
+      saldoSekarang = 0; // fallback
+    }
 
     const sumberMap: Record<string, number> = {};
     (penerimaan ?? []).forEach((r) => {

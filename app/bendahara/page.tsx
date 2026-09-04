@@ -229,32 +229,39 @@ export default function BendaharaPage() {
       />
 
       {/* ── HEADER ── */}
-      <div className="flex justify-between items-center no-print">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 sm:pb-0 no-print">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 bg-white border border-gray-200 rounded-xl p-1 shadow-sm flex items-center justify-center shrink-0">
             <img src="/logo2.png" alt="Logo LAZISNU" className="w-full h-full object-contain" />
           </div>
-          <div>
-            <h1 className="text-xl font-extrabold text-gray-900">💼 Bendahara</h1>
-            <p className="text-xs text-gray-500 mt-0.5">Pencatatan Keuangan LAZISNU Badean</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg sm:text-xl font-extrabold text-gray-900 flex items-center gap-1.5 whitespace-nowrap">
+              <span>💼</span>
+              <span>Bendahara</span>
+            </h1>
+            <p className="text-[11px] sm:text-xs text-gray-500 truncate">Pencatatan Keuangan LAZISNU Badean</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Action Buttons: Full-width comfortable pills on mobile, auto on desktop */}
+        <div className="flex items-center gap-2 self-stretch sm:self-auto shrink-0">
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition active:scale-95"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition active:scale-95 min-h-[38px] sm:min-h-0"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.562 0-1.056-.419-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m0 0a48.1 48.1 0 0110.56 0m-10.56 0V3.375c0-.621.504-1.125 1.125-1.125h8.25c.621 0 1.125.504 1.125 1.125v3.656" />
             </svg>
-            Cetak PDF
+            <span>Cetak PDF</span>
           </button>
-          <button onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition active:scale-95">
+          <button
+            onClick={handleLogout}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 shadow-sm transition active:scale-95 min-h-[38px] sm:min-h-0"
+          >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
             </svg>
-            Logout
+            <span>Logout</span>
           </button>
         </div>
       </div>
@@ -269,17 +276,37 @@ export default function BendaharaPage() {
       )}
 
       {/* ── FORM TRANSAKSI ── */}
-      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4 no-print">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-gray-900">📝 Catat Transaksi Baru</h2>
-          <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
-            <button type="button" onClick={() => setJenis('PEMASUKAN')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${jenis === 'PEMASUKAN' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-              💰 Pemasukan
+      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4 no-print">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h2 className="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-1.5">
+            <span>📝</span>
+            <span>Catat Transaksi Baru</span>
+          </h2>
+          {/* Symmetrical Segmented Switcher */}
+          <div className="grid grid-cols-2 p-1 bg-gray-100 rounded-xl w-full sm:w-72 border border-gray-200/60 shadow-inner">
+            <button
+              type="button"
+              onClick={() => setJenis('PEMASUKAN')}
+              className={`flex items-center justify-center gap-1.5 py-2.5 sm:py-2 px-3 rounded-lg text-xs font-bold transition-all min-h-[40px] sm:min-h-0 ${
+                jenis === 'PEMASUKAN'
+                  ? 'bg-white text-emerald-700 shadow-sm font-extrabold'
+                  : 'text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              <span>💰</span>
+              <span>Pemasukan</span>
             </button>
-            <button type="button" onClick={() => setJenis('PENGELUARAN')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${jenis === 'PENGELUARAN' ? 'bg-white text-red-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-              🏷️ Pengeluaran
+            <button
+              type="button"
+              onClick={() => setJenis('PENGELUARAN')}
+              className={`flex items-center justify-center gap-1.5 py-2.5 sm:py-2 px-3 rounded-lg text-xs font-bold transition-all min-h-[40px] sm:min-h-0 ${
+                jenis === 'PENGELUARAN'
+                  ? 'bg-white text-red-700 shadow-sm font-extrabold'
+                  : 'text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              <span>🏷️</span>
+              <span>Pengeluaran</span>
             </button>
           </div>
         </div>
@@ -288,14 +315,14 @@ export default function BendaharaPage() {
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5">Tanggal</label>
             <input type="date" value={formTanggal} onChange={(e) => setFormTanggal(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" />
+              className="w-full px-3 py-2 border border-gray-300 rounded-xl text-base sm:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition min-h-[44px]" />
           </div>
           {jenis === 'PEMASUKAN' ? (
             <>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">Sumber</label>
                 <select value={formSumber} onChange={(e) => setFormSumber(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-base sm:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition min-h-[44px]">
                   <option value="ZAKAT_MAL">Zakat Mal</option>
                   <option value="SEDEKAH_INFAK">Sedekah / Infak</option>
                 </select>
@@ -303,7 +330,7 @@ export default function BendaharaPage() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">Muzakki (opsional)</label>
                 <input type="text" placeholder="Nama muzakki" value={formMuzakki} onChange={(e) => setFormMuzakki(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-base sm:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition min-h-[44px]" />
               </div>
             </>
           ) : (
@@ -311,7 +338,7 @@ export default function BendaharaPage() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">Kategori</label>
                 <select value={formKategori} onChange={(e) => setFormKategori(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-base sm:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition min-h-[44px]">
                   <option value="ATK">ATK</option>
                   <option value="PERLENGKAPAN_DISTRIBUSI">Perlengkapan Distribusi</option>
                   <option value="OPERASIONAL">Operasional</option>
@@ -321,15 +348,15 @@ export default function BendaharaPage() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">Deskripsi</label>
-                <input type="text" placeholder="Mis: Beli buku &amp; pulpen" value={formDeskripsi} onChange={(e) => setFormDeskripsi(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" />
+                <input type="text" placeholder="Mis: Beli buku & pulpen" value={formDeskripsi} onChange={(e) => setFormDeskripsi(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-base sm:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition min-h-[44px]" />
               </div>
             </>
           )}
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5">Jumlah (Rp)</label>
             <input type="number" required min="1" placeholder="0" value={formJumlah} onChange={(e) => setFormJumlah(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" />
+              className="w-full px-3 py-2 border border-gray-300 rounded-xl text-base sm:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition min-h-[44px]" />
           </div>
         </div>
 
@@ -337,13 +364,13 @@ export default function BendaharaPage() {
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5">Keterangan (opsional)</label>
             <input type="text" placeholder="Catatan tambahan" value={formKet} onChange={(e) => setFormKet(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" />
+              className="w-full px-3 py-2 border border-gray-300 rounded-xl text-base sm:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition min-h-[44px]" />
           </div>
         )}
 
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-1">
           <button type="submit" disabled={submitting}
-            className={`flex items-center gap-2 py-2 px-6 text-white rounded-xl text-sm font-bold transition disabled:opacity-60 ${jenis === 'PEMASUKAN' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}`}>
+            className={`w-full sm:w-auto flex items-center justify-center gap-2 py-3 px-6 text-white rounded-xl text-sm font-bold transition disabled:opacity-60 shadow-sm min-h-[44px] ${jenis === 'PEMASUKAN' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}`}>
             {submitting ? <><Spinner /> Menyimpan...</> : 'Simpan Transaksi'}
           </button>
         </div>
@@ -351,50 +378,49 @@ export default function BendaharaPage() {
 
       {/* ── FILTER BULAN ── */}
       <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm no-print">
-        <p className="text-xs font-bold text-gray-700 mb-3">🗓️ Filter Periode</p>
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+        <p className="text-xs font-bold text-gray-700 mb-2.5">🗓️ Filter Periode</p>
+        <div className="grid grid-cols-2 sm:flex gap-3 sm:items-end">
           <div>
             <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Tahun</label>
             <select value={filterTahun} onChange={(e) => setFilterTahun(e.target.value)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-xl text-base sm:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition min-h-[44px]">
               {tahunList.map((t) => (<option key={t} value={t}>{t}</option>))}
             </select>
           </div>
           <div>
             <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Bulan</label>
             <select value={filterBulan} onChange={(e) => setFilterBulan(e.target.value)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-xl text-base sm:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition min-h-[44px]">
               {bulanOptions.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
             </select>
           </div>
-          <div className="flex-1 hidden sm:block" />
-          <div className="text-right">
+          <div className="col-span-2 sm:flex-1 text-right mt-1 sm:mt-0">
             <p className="text-[10px] text-gray-400 uppercase tracking-wide">Periode aktif</p>
-            <p className="text-sm font-bold text-gray-800">{formatNamaBulan(filterBulan)} {filterTahun}</p>
+            <p className="text-sm font-bold text-emerald-800">{formatNamaBulan(filterBulan)} {filterTahun}</p>
           </div>
         </div>
       </div>
 
       {/* ── RINGKASAN SALDO ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+        <div className="bg-white border border-gray-200 rounded-2xl p-3.5 sm:p-4 shadow-sm">
           <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Saldo Awal</p>
-          <p className="text-base font-extrabold text-gray-900 mt-1">{formatRupiah(saldoAwal)}</p>
+          <p className="text-sm sm:text-base font-extrabold text-gray-900 mt-1">{formatRupiah(saldoAwal)}</p>
           <p className="text-[10px] text-gray-400 mt-0.5">{formatNamaBulan(filterBulan)} {filterTahun}</p>
         </div>
-        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 shadow-sm">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 sm:p-4 shadow-sm">
           <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide">Pemasukan</p>
-          <p className="text-base font-extrabold text-emerald-700 mt-1">{formatRupiah(totalPemasukan)}</p>
+          <p className="text-sm sm:text-base font-extrabold text-emerald-700 mt-1">{formatRupiah(totalPemasukan)}</p>
           <p className="text-[10px] text-emerald-400 mt-0.5">Bulan ini</p>
         </div>
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 shadow-sm">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-3.5 sm:p-4 shadow-sm">
           <p className="text-[10px] font-semibold text-red-600 uppercase tracking-wide">Pengeluaran</p>
-          <p className="text-base font-extrabold text-red-700 mt-1">{formatRupiah(totalPengeluaran)}</p>
+          <p className="text-sm sm:text-base font-extrabold text-red-700 mt-1">{formatRupiah(totalPengeluaran)}</p>
           <p className="text-[10px] text-red-400 mt-0.5">Termasuk distribusi</p>
         </div>
-        <div className={`rounded-2xl p-4 shadow-sm border ${saldoSaatIni < 0 ? 'bg-red-50 border-red-300' : 'bg-gradient-to-br from-emerald-600 to-emerald-700 border-emerald-500'}`}>
+        <div className={`rounded-2xl p-3.5 sm:p-4 shadow-sm border ${saldoSaatIni < 0 ? 'bg-red-50 border-red-300' : 'bg-gradient-to-br from-emerald-600 to-emerald-700 border-emerald-500'}`}>
           <p className={`text-[10px] font-semibold uppercase tracking-wide ${saldoSaatIni < 0 ? 'text-red-600' : 'text-emerald-100'}`}>Saldo Saat Ini</p>
-          <p className={`text-base font-extrabold mt-1 ${saldoSaatIni < 0 ? 'text-red-700' : 'text-white'}`}>
+          <p className={`text-sm sm:text-base font-extrabold mt-1 ${saldoSaatIni < 0 ? 'text-red-700' : 'text-white'}`}>
             {formatRupiah(saldoSaatIni)}
           </p>
           <div className="no-print">
@@ -413,8 +439,8 @@ export default function BendaharaPage() {
                       setIsSaving(false);
                     }
                   }} disabled={isSaving}
-                    className="mt-2 w-full py-1.5 px-3 bg-white/20 hover:bg-white/30 text-white rounded-lg text-[10px] font-semibold disabled:opacity-50 transition flex items-center justify-center gap-1.5">
-                    {isSaving ? <><Spinner size={3} /> Menyimpan...</> : `💾 Simpan ${formatNamaBulan(filterBulan)}`}
+                    className="mt-2 w-full py-2 px-3 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs font-semibold disabled:opacity-50 transition flex items-center justify-center gap-1.5 min-h-[36px]">
+                    {isSaving ? <><Spinner size={3} /> Menyimpan...</> : `💾 Simpan Saldo`}
                   </button>
                 );
               }
@@ -431,8 +457,8 @@ export default function BendaharaPage() {
                       setIsSaving(false);
                     }
                   }} disabled={isSaving}
-                    className="mt-2 w-full py-1.5 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-semibold disabled:opacity-50 transition flex items-center justify-center gap-1.5">
-                    {isSaving ? <><Spinner size={3} /> Menyimpan...</> : `🔄 Update ${formatNamaBulan(filterBulan)}`}
+                    className="mt-2 w-full py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold disabled:opacity-50 transition flex items-center justify-center gap-1.5 min-h-[36px]">
+                    {isSaving ? <><Spinner size={3} /> Menyimpan...</> : `🔄 Update Saldo`}
                   </button>
                 );
               }
@@ -449,7 +475,7 @@ export default function BendaharaPage() {
 
       {/* ── RIWAYAT TRANSAKSI ── */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50">
+        <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-gray-900">📋 Riwayat Transaksi</span>
             <span className="text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-semibold">{dataFiltered.length}</span>
@@ -461,7 +487,7 @@ export default function BendaharaPage() {
               <select
                 value={sortOrder}
                 onChange={(e) => { setSortOrder(e.target.value as 'asc' | 'desc'); setPage(1); }}
-                className="px-2.5 py-1 border border-gray-300 rounded-xl text-xs font-semibold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition cursor-pointer"
+                className="px-2.5 py-1.5 border border-gray-300 rounded-xl text-xs font-semibold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition cursor-pointer"
               >
                 <option value="asc">⬆️ Tgl 1 ➔ 31 (Lama ➔ Baru)</option>
                 <option value="desc">⬇️ Tgl 31 ➔ 1 (Baru ➔ Lama)</option>
@@ -488,7 +514,52 @@ export default function BendaharaPage() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* ── MOBILE TRANSACTION FEED (Phones < md) ── */}
+            <div className="block md:hidden divide-y divide-gray-100 print:hidden">
+              {paginatedData.map((item) => (
+                <div key={item.id} className="p-3.5 hover:bg-gray-50/70 transition">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-sm font-extrabold shadow-sm ${
+                        item.jenis === 'PEMASUKAN' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {item.jenis === 'PEMASUKAN' ? '↓' : '↑'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-bold text-gray-900 text-sm leading-snug">{item.label}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                            item.jenis === 'PEMASUKAN' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'
+                          }`}>
+                            {item.jenis === 'PEMASUKAN' ? 'Masuk' : 'Keluar'}
+                          </span>
+                        </div>
+                        {item.keterangan && (
+                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{item.keterangan}</p>
+                        )}
+                        <p className="text-[10px] text-gray-400 mt-1">{formatTanggalSingkat(item.tanggal)}</p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className={`font-extrabold text-sm ${item.jenis === 'PEMASUKAN' ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {item.jenis === 'PEMASUKAN' ? '+' : '−'}{formatRupiah(item.jumlah)}
+                      </p>
+                      {item.tabel !== 'distribusi' && (
+                        <button
+                          onClick={() => setConfirmHapusItem(item)}
+                          className="mt-1 text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 rounded hover:bg-red-50 transition"
+                        >
+                          Hapus
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── DESKTOP & PRINT TABLE VIEW (>= md) ── */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="bg-gray-50 text-gray-500 uppercase text-[10px] tracking-wider border-b border-gray-100">
@@ -496,7 +567,7 @@ export default function BendaharaPage() {
                     <th className="p-3">Jenis</th>
                     <th className="p-3">Keterangan</th>
                     <th className="p-3 text-right">Jumlah</th>
-                    <th className="p-3 text-center no-print">Aksi</th>
+                    <th className="p-3 text-center no-print w-16">Aksi</th>
                   </tr>
                 </thead>
                 {/* Screen View Body (Paginated) */}
@@ -522,7 +593,7 @@ export default function BendaharaPage() {
                         {item.tabel !== 'distribusi' ? (
                           <button
                             onClick={() => setConfirmHapusItem(item)}
-                            className="text-red-500 hover:text-red-700 text-[10px] font-bold transition"
+                            className="text-red-500 hover:text-red-700 text-xs font-bold transition p-1"
                           >
                             Hapus
                           </button>
